@@ -14,9 +14,7 @@ import {
 import AddToPlaylistModal from "./add-to-playlist";
 import CreatePlaylistModal from "./create-playlist";
 import {
-  createPlaylist,
-  deleteProblem,
-  addProblemToPlaylist,
+  deleteProblem
 } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
