@@ -207,7 +207,23 @@ for (let i = 3; i <= n; i++) {
 }
 
 return dp[n];
-}`,
+}
+
+// Parse input and execute
+const readline = require('readline');
+const rl = readline.createInterface({
+input: process.stdin,
+output: process.stdout,
+terminal: false
+});
+
+rl.on('line', (line) => {
+const n = parseInt(line.trim());
+const result = climbStairs(n);
+
+console.log(result);
+rl.close();
+});`,
     PYTHON: `class Solution:
   def climbStairs(self, n: int) -> int:
       # Base cases
@@ -222,7 +238,21 @@ return dp[n];
       for i in range(3, n + 1):
           dp[i] = dp[i - 1] + dp[i - 2]
       
-      return dp[n]`,
+      return dp[n]
+      
+      # Input parsing
+if __name__ == "__main__":
+  import sys
+  
+  # Parse input
+  n = int(sys.stdin.readline().strip())
+  
+  # Solve
+  sol = Solution()
+  result = sol.climbStairs(n)
+  
+  # Print result
+  print(result)`,
     JAVA: `import java.util.Scanner;
 
 class Main {
@@ -242,6 +272,17 @@ class Main {
       }
       
       return dp[n];
+  }
+      public static void main(String[] args) {
+      Scanner scanner = new Scanner(System.in);
+      int n = Integer.parseInt(scanner.nextLine().trim());
+      
+      // Use Main class instead of Solution
+      Main main = new Main();
+      int result = main.climbStairs(n);
+      
+      System.out.println(result);
+      scanner.close();
   }
 }`,
   },
@@ -501,14 +542,132 @@ const CreateProblemForm = () => {
         JAVA: { input: "", output: "", explanation: "" },
       },
       codeSnippets: {
-        JAVASCRIPT: "function solution() {\n  // Write your code here\n}",
-        PYTHON: "def solution():\n    # Write your code here\n    pass",
-        JAVA: "public class Solution {\n    public static void main(String[] args) {\n        // Write your code here\n    }\n}",
-      },
+    JAVASCRIPT: `/**
+   * @param {string} s
+   * @return {boolean}
+   */
+  function solution(s) {
+    // Write your code here
+  }
+  
+  // Add readline for dynamic input handling
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+  });
+  
+  // Process input line
+  rl.on('line', (line) => {
+    // Call solution with the input string
+    const result = solution(line);
+    
+    // Output the result
+    console.log(result ? "true" : "false");
+    rl.close();
+  });`,
+    PYTHON: `class Solution:
+      def solution(self, s: str) -> bool:
+          # Write your code here
+          pass
+  
+  # Input parsing
+  if __name__ == "__main__":
+      import sys
+      # Read the input string
+      s = sys.stdin.readline().strip()
+      
+      # Call solution
+      sol = Solution()
+      result = sol.solution(s)
+      
+      # Output result
+      print(str(result).lower())  # Convert True/False to lowercase true/false`,
+    JAVA: `import java.util.Scanner;
+
+public class Main {
+    public static String preprocess(String s) {
+        return s.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+    }
+
+    public static boolean solution(String s) {
+       
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String input = sc.nextLine();
+
+        boolean result = solution(input);
+        System.out.println(result ? "true" : "false");
+    }
+}
+`,
+  },
       referenceSolutions: {
-        JAVASCRIPT: "// Add your reference solution here",
-        PYTHON: "# Add your reference solution here",
-        JAVA: "// Add your reference solution here",
+        JAVASCRIPT: `/**
+   * @param {string} s
+   * @return {boolean}
+   */
+  function solution(s) {
+    // Write your code here
+  }
+  
+  // Add readline for dynamic input handling
+  const readline = require('readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: false
+  });
+  
+  // Process input line
+  rl.on('line', (line) => {
+    // Call solution with the input string
+    const result = solution(line);
+    
+    // Output the result
+    console.log(result ? "true" : "false");
+    rl.close();
+  });`,
+    PYTHON: `class Solution:
+      def solution(self, s: str) -> bool:
+          # Write your code here
+          pass
+  
+  # Input parsing
+  if __name__ == "__main__":
+      import sys
+      # Read the input string
+      s = sys.stdin.readline().strip()
+      
+      # Call solution
+      sol = Solution()
+      result = sol.solution(s)
+      
+      # Output result
+      print(str(result).lower())  # Convert True/False to lowercase true/false`,
+    JAVA: `import java.util.Scanner;
+
+public class Main {
+    public static String preprocess(String s) {
+        return s.replaceAll("[^a-zA-Z0-9]", "").toLowerCase();
+    }
+
+    public static boolean solution(String s) {
+       
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String input = sc.nextLine();
+
+        boolean result = solution(input);
+        System.out.println(result ? "true" : "false");
+    }
+}
+`
       },
     },
   });
