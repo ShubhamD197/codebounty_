@@ -38,8 +38,14 @@ import { ModeToggle } from "@/components/ui/mode-toggle";
 import { getJudge0LanguageId } from "@/lib/judge0/judge0";
 import { toast } from "sonner";
 import Link from "next/link";
-import { executeCode, getAllSubmissionByCurrentUserForProblem, getProblemById } from "@/modules/problems/actions";
-import { SubmissionDetails } from "@/modules/problems/components/submission-details";
+import {
+  runCode,
+  submitCode,
+  getAllSubmissionByCurrentUserForProblem,
+  getProblemById,
+} from "@/modules/problems/actions";
+
+// import { SubmissionDetails } from "@/modules/problems/components/submission-details";
 import { TestCaseTable } from "@/modules/problems/components/test-case-table";
 import { SubmissionHistory } from "@/modules/problems/components/submission-history";
 
@@ -54,6 +60,87 @@ const getDifficultyColor = (difficulty) => {
     default:
       return "bg-gray-100 text-gray-800 border-gray-200";
   }
+};
+
+const SubmissionResultSummary = ({ submission }) => {
+  const {
+    status,
+    passedTestCases,
+    totalTestCases,
+    performance,
+  } = submission;
+
+  const isAccepted = status === "Accepted";
+
+  return (
+    <Card className="mt-4">
+      <CardHeader>
+        <CardTitle
+          className={
+            isAccepted
+              ? "text-green-500"
+              : "text-red-500"
+          }
+        >
+          {status}
+        </CardTitle>
+
+        <CardDescription>
+          {passedTestCases} / {totalTestCases} test cases passed
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent>
+        <div className="grid grid-cols-2 gap-4">
+
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-muted-foreground">
+              Test Cases
+            </p>
+
+            <p className="text-xl font-semibold">
+              {passedTestCases} / {totalTestCases}
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-muted-foreground">
+              Status
+            </p>
+
+            <p className="text-xl font-semibold">
+              {status}
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-muted-foreground">
+              Runtime
+            </p>
+
+            <p className="text-xl font-semibold">
+              {performance?.time?.length
+                ? performance.time[0]
+                : "N/A"}
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="text-sm text-muted-foreground">
+              Memory
+            </p>
+
+            <p className="text-xl font-semibold">
+              {performance?.memory?.length
+                ? performance.memory[0]
+                : "N/A"}
+            </p>
+          </div>
+
+        </div>
+      </CardContent>
+    </Card>
+  );
 };
 
 const ProblemIdPage = ({ params }) => {
@@ -113,30 +200,87 @@ const ProblemIdPage = ({ params }) => {
   const handleRun = async () => {
     try {
       setIsRunning(true);
+
       const language_id = getJudge0LanguageId(selectedLanguage);
-      const stdin = problem.testCases.map((tc) => tc.input);
-      const expected_outputs = problem.testCases.map((tc) => tc.output);
-      const res = await executeCode(
+
+      const res = await runCode(
         code,
         language_id,
-        stdin,
-        expected_outputs,
         problem.id
       );
 
-      setExecutionResponse(res);
-      if (res.success) {
-        toast.success(res.message);
+      if (!res.success) {
+        toast.error(res.error || "Failed to run code");
+        setExecutionResponse(null);
+        return;
+      }
+
+      setExecutionResponse({
+        type: "run",
+        submission: res.submission,
+      });
+
+      if (res.message) {
+        if (res.submission.testCases.every((testCase) => testCase.passed)) {
+          toast.success(res.message);
+        } else {
+          toast.error(res.message);
+        }
       }
     } catch (error) {
       console.error("Error running code:", error);
-      toast.error(error.message);
+      toast.error(error.message || "Failed to run code");
     } finally {
       setIsRunning(false);
     }
   };
 
-  const handleSubmit = () => { };
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const language_id = getJudge0LanguageId(selectedLanguage);
+
+      const res = await submitCode(
+        code,
+        language_id,
+        problem.id
+      );
+
+      if (!res.success) {
+        toast.error(res.error || "Failed to submit code");
+        return;
+      }
+
+      setExecutionResponse({
+        type: "submit",
+        submission: res,
+      });
+
+      if (res.status === "Accepted") {
+        toast.success("Accepted");
+      } else {
+        toast.error("Wrong Answer");
+      }
+
+      // Refresh submission history after a real submission
+      const resolvedParams = await params;
+
+      const history =
+        await getAllSubmissionByCurrentUserForProblem(
+          resolvedParams.id
+        );
+
+      if (history.success) {
+        setSubmissionHistory(history.data);
+      }
+    } catch (error) {
+      console.error("Error submitting code:", error);
+      toast.error(error.message || "Failed to submit code");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   if (!problem) {
     return (
@@ -368,43 +512,58 @@ const ProblemIdPage = ({ params }) => {
               <CardContent>
                 <ScrollArea className="h-48">
                   <div className="space-y-4">
-                    {problem.testCases.map((testCase, index) => (
-                      <div key={index} className="border rounded-lg p-3">
-                        <div className="text-sm font-medium mb-2">
-                          Test Case {index + 1}
-                        </div>
-                        <div className="space-y-1 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">
-                              Input:{" "}
-                            </span>
-                            <code className="bg-muted px-2 py-1 rounded text-xs">
-                              {testCase.input}
-                            </code>
+                    {problem.testCases
+                      .filter((testCase) => testCase.isHidden === false)
+                      .map((testCase, index) => (
+                        <div key={index} className="border rounded-lg p-3">
+                          <div className="text-sm font-medium mb-2">
+                            Test Case {index + 1}
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">
-                              Expected:{" "}
-                            </span>
-                            <code className="bg-muted px-2 py-1 rounded text-xs">
-                              {testCase.output}
-                            </code>
+
+                          <div className="space-y-1 text-sm">
+                            <div>
+                              <span className="text-muted-foreground">
+                                Input:{" "}
+                              </span>
+
+                              <code className="bg-muted px-2 py-1 rounded text-xs">
+                                {testCase.input}
+                              </code>
+                            </div>
+
+                            <div>
+                              <span className="text-muted-foreground">
+                                Expected:{" "}
+                              </span>
+
+                              <code className="bg-muted px-2 py-1 rounded text-xs">
+                                {testCase.output}
+                              </code>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </ScrollArea>
               </CardContent>
             </Card>
 
             {/* Test Results and Submission Details */}
-            {executionResponse && executionResponse.submission && (
-              <div className="space-y-4 mt-4">
-                <SubmissionDetails submission={executionResponse.submission} />
-                <TestCaseTable testCases={executionResponse.submission.testCases} />
-              </div>
-            )}
+            {executionResponse?.type === "run" &&
+              executionResponse.submission?.testCases && (
+                <div className="space-y-4 mt-4">
+                  <TestCaseTable
+                    testCases={executionResponse.submission.testCases}
+                  />
+                </div>
+              )}
+
+            {executionResponse?.type === "submit" &&
+              executionResponse.submission && (
+                <SubmissionResultSummary
+                  submission={executionResponse.submission}
+                />
+              )}
 
           </div>
         </div>
