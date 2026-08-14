@@ -41,6 +41,7 @@ const Navbar = ({ userRole }) => {
             >
               Profile
             </Link>
+            
           </div>
 
           <div className="flex items-center gap-4">

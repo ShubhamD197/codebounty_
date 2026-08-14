@@ -502,7 +502,11 @@ const CodeEditor = ({ value, onChange, language = "javascript" }) => {
       <div className="px-4 py-2 bg-slate-800 border-b text-sm font-mono">
         {language}
       </div>
+<<<<<<< Updated upstream
       <div className="h-[300px] w-full">
+=======
+      <div className="h-87.5 w-full">
+>>>>>>> Stashed changes
         <Editor
           height="300px"
           defaultLanguage={languageMap[language]}
@@ -815,8 +819,166 @@ public class Main {
                     {errors.description.message}
                   </p>
                 )}
+<<<<<<< Updated upstream
+=======
+              </TabsTrigger>
+              <TabsTrigger
+                value="testcases"
+                className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-6 py-3 font-medium"
+              >
+                <Settings2 className="w-4 h-4 mr-2" /> Test Cases
+                {hasErrors(["testCases"]) && <AlertCircle className="w-3.5 h-3.5 ml-2 text-destructive" />}
+              </TabsTrigger>
+            </TabsList>
+
+            {/* TAB 1: OVERVIEW */}
+            <TabsContent value="overview" className="space-y-8 outline-none animate-in fade-in-50 duration-500">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
+                  <div className="space-y-4">
+                    <div>
+                      <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        Problem Title
+                      </Label>
+                      <Input
+                        {...register("title")}
+                        placeholder="e.g. Valid Palindrome"
+                        className="mt-2 h-12 text-lg font-medium bg-muted/20"
+                      />
+                      {errors.title && <p className="text-sm text-destructive mt-1.5">{errors.title.message}</p>}
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        Description (Markdown)
+                      </Label>
+                      <Textarea
+                        {...register("description")}
+                        placeholder="Describe the problem context and requirements..."
+                        className="mt-2 min-h-75 resize-y font-mono text-sm leading-relaxed bg-muted/20"
+                      />
+                      {errors.description && (
+                        <p className="text-sm text-destructive mt-1.5">{errors.description.message}</p>
+                      )}
+                    </div>
+
+                    <div>
+                      <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        Editorial (Optional)
+                      </Label>
+                      <Textarea
+                        {...register("editorial")}
+                        placeholder="Explain the intended solution approach..."
+                        className="mt-2 min-h-37.5 resize-y bg-muted/20"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-8">
+                  <Card className="border-border/50 shadow-sm">
+                    <CardHeader className="pb-4 border-b border-border/40">
+                      <CardTitle className="text-base font-semibold">Configuration</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-6">
+                      <div>
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Difficulty
+                        </Label>
+                        <Controller
+                          name="difficulty"
+                          control={control}
+                          render={({ field }) => (
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger className="mt-2 bg-muted/20">
+                                <SelectValue placeholder="Select difficulty" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="EASY">
+                                  <span className="text-green-500 font-medium">Easy</span>
+                                </SelectItem>
+                                <SelectItem value="MEDIUM">
+                                  <span className="text-amber-500 font-medium">Medium</span>
+                                </SelectItem>
+                                <SelectItem value="HARD">
+                                  <span className="text-red-500 font-medium">Hard</span>
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between items-center mb-2">
+                          <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Tags
+                          </Label>
+                          <Button type="button" variant="ghost" size="sm" className="h-6 px-2 text-xs" onClick={() => appendTag("")}>
+                            <Plus className="w-3 h-3 mr-1" /> Add
+                          </Button>
+                        </div>
+                        <div className="space-y-2">
+                          {tagFields.map((field, index) => (
+                            <div key={field.id} className="flex gap-2">
+                              <Input
+                                {...register(`tags.${index}`)}
+                                placeholder="e.g. Dynamic Programming"
+                                className="h-8 text-sm bg-muted/20"
+                              />
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeTag(index)}
+                                disabled={tagFields.length === 1}
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                        {errors.tags && <p className="text-xs text-destructive mt-1.5">{errors.tags.message}</p>}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-border/50 shadow-sm">
+                    <CardHeader className="pb-4 border-b border-border/40">
+                      <CardTitle className="text-base font-semibold">Technical Details</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-6 space-y-4">
+                      <div>
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Constraints
+                        </Label>
+                        <Textarea
+                          {...register("constraints")}
+                          placeholder="1 <= s.length <= 10^5"
+                          className="mt-2 min-h-25 font-mono text-sm bg-muted/20"
+                        />
+                        {errors.constraints && (
+                          <p className="text-xs text-destructive mt-1.5">{errors.constraints.message}</p>
+                        )}
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Hints
+                        </Label>
+                        <Textarea
+                          {...register("hints")}
+                          placeholder="Optional hints..."
+                          className="mt-2 min-h-20 bg-muted/20"
+                        />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+>>>>>>> Stashed changes
               </div>
 
+<<<<<<< Updated upstream
               <div>
                 <Label htmlFor="difficulty" className="text-lg font-semibold">
                   Difficulty
@@ -866,6 +1028,101 @@ public class Main {
                     {errors.difficulty.message}
                   </p>
                 )}
+=======
+            {/* TAB 2: ENVIRONMENTS */}
+            <TabsContent value="environments" className="outline-none animate-in fade-in-50 duration-500">
+              <div className="border border-border/50 rounded-lg overflow-hidden bg-background shadow-sm">
+                <Tabs value={activeLangTab} onValueChange={setActiveLangTab} className="w-full">
+                  <div className="flex border-b border-border/50 bg-muted/10 px-4 pt-4">
+                    <TabsList className="bg-transparent h-auto p-0 gap-6">
+                      {["JAVASCRIPT", "PYTHON", "JAVA"].map((lang) => (
+                        <TabsTrigger
+                          key={lang}
+                          value={lang}
+                          className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-2 py-2 font-mono text-sm data-[state=active]:text-primary"
+                        >
+                          {lang}
+                        </TabsTrigger>
+                      ))}
+                    </TabsList>
+                  </div>
+
+                  {["JAVASCRIPT", "PYTHON", "JAVA"].map((language) => (
+                    <TabsContent key={language} value={language} className="p-6 m-0 space-y-8 bg-muted/5">
+                      <div className="grid lg:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <Label className="text-sm font-semibold flex items-center gap-2">
+                            <Code2 className="w-4 h-4 text-muted-foreground" /> Starter Template
+                          </Label>
+                          <Controller
+                            name={`codeSnippets.${language}`}
+                            control={control}
+                            render={({ field }) => (
+                              <CodeEditor value={field.value} onChange={field.onChange} language={language.toLowerCase()} title="user_solution" />
+                            )}
+                          />
+                          {errors.codeSnippets?.[language] && (
+                            <p className="text-xs text-destructive">{errors.codeSnippets[language].message}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label className="text-sm font-semibold flex items-center gap-2">
+                            <CheckCircle2 className="w-4 h-4 text-green-500" /> Reference Solution
+                          </Label>
+                          <Controller
+                            name={`referenceSolutions.${language}`}
+                            control={control}
+                            render={({ field }) => (
+                              <CodeEditor value={field.value} onChange={field.onChange} language={language.toLowerCase()} title="reference_solution" />
+                            )}
+                          />
+                          {errors.referenceSolutions?.[language] && (
+                            <p className="text-xs text-destructive">{errors.referenceSolutions[language].message}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <Separator className="bg-border/40" />
+
+                      <div className="space-y-4">
+                        <Label className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                          Language Specific Example
+                        </Label>
+                        <div className="grid md:grid-cols-2 gap-4">
+                          <div>
+                            <Label className="text-xs text-muted-foreground mb-2 block">Example Input format</Label>
+                            <Textarea
+                              {...register(`examples.${language}.input`)}
+                              className="min-h-25 font-mono text-sm bg-background border-border/50"
+                            />
+                            {errors.examples?.[language]?.input && (
+                              <p className="text-xs text-destructive mt-1">{errors.examples[language].input.message}</p>
+                            )}
+                          </div>
+                          <div>
+                            <Label className="text-xs text-muted-foreground mb-2 block">Example Output format</Label>
+                            <Textarea
+                              {...register(`examples.${language}.output`)}
+                              className="min-h-25 font-mono text-sm bg-background border-border/50"
+                            />
+                            {errors.examples?.[language]?.output && (
+                              <p className="text-xs text-destructive mt-1">{errors.examples[language].output.message}</p>
+                            )}
+                          </div>
+                          <div className="md:col-span-2">
+                            <Label className="text-xs text-muted-foreground mb-2 block">Explanation</Label>
+                            <Textarea
+                              {...register(`examples.${language}.explanation`)}
+                              className="min-h-20 bg-background border-border/50"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </TabsContent>
+                  ))}
+                </Tabs>
+>>>>>>> Stashed changes
               </div>
             </div>
 
@@ -937,12 +1194,60 @@ public class Main {
               </CardHeader>
               <CardContent className="space-y-6">
                 {testCaseFields.map((field, index) => (
+<<<<<<< Updated upstream
                   <Card key={field.id} className="bg-background">
                     <CardHeader className="pb-4">
                       <div className="flex justify-between items-center">
                         <CardTitle className="text-lg">
                           Test Case #{index + 1}
                         </CardTitle>
+=======
+                  <div
+                    key={field.id}
+                    className="group relative flex gap-4 p-4 rounded-xl border border-border/40 bg-muted/10 hover:border-border transition-colors"
+                  >
+                    <div className="pt-2 text-muted-foreground/50 cursor-grab active:cursor-grabbing">
+                      <GripVertical className="w-5 h-5" />
+                    </div>
+
+                    <div className="flex-1 grid md:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">Input</Label>
+                        <Textarea
+                          {...register(`testCases.${index}.input`)}
+                          placeholder="stdin"
+                          className="min-h-30 font-mono text-sm bg-background/50 border-border/50 resize-y"
+                        />
+                        {errors.testCases?.[index]?.input && (
+                          <p className="text-xs text-destructive">{errors.testCases[index].input.message}</p>
+                        )}
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+                          Expected Output
+                        </Label>
+                        <Textarea
+                          {...register(`testCases.${index}.output`)}
+                          placeholder="stdout"
+                          className="min-h-30 font-mono text-sm bg-background/50 border-border/50 resize-y"
+                        />
+                        {errors.testCases?.[index]?.output && (
+                          <p className="text-xs text-destructive">{errors.testCases[index].output.message}</p>
+                        )}
+                      </div>
+
+                      <div className="md:col-span-2 flex items-center justify-between pt-2 border-t border-border/30">
+                        <label className="flex items-center gap-2 text-sm cursor-pointer hover:text-foreground text-muted-foreground transition-colors">
+                          <input
+                            type="checkbox"
+                            {...register(`testCases.${index}.isHidden`)}
+                            className="rounded border-muted-foreground/30 text-primary bg-transparent focus:ring-primary focus:ring-offset-background"
+                          />
+                          Hidden Case (used only during final submission)
+                        </label>
+
+>>>>>>> Stashed changes
                         <Button
                           type="button"
                           variant="ghost"

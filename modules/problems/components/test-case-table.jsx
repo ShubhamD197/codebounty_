@@ -10,7 +10,7 @@ export const TestCaseTable = ({ testCases }) => {
         <TableCaption>Test Case Results</TableCaption>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[100px]">Case #</TableHead>
+            <TableHead className="w-25">Case #</TableHead>
             <TableHead>Status</TableHead>
             <TableHead>Memory</TableHead>
             <TableHead>Time</TableHead>
@@ -39,10 +39,10 @@ export const TestCaseTable = ({ testCases }) => {
               </TableCell>
               <TableCell>{testCase.memory}</TableCell>
               <TableCell>{testCase.time}</TableCell>
-              <TableCell className="max-w-[200px] truncate font-mono text-sm">
+              <TableCell className="max-w-50 truncate font-mono text-sm">
                 {testCase.stdout}
               </TableCell>
-              <TableCell className="max-w-[200px] truncate font-mono text-sm">
+              <TableCell className="max-w-50 truncate font-mono text-sm">
                 {testCase.expected}
               </TableCell>
             </TableRow>

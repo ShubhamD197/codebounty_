@@ -191,7 +191,7 @@ const ProblemsTable = ({ problems, user }) => {
         </CardHeader>
         <CardContent>
           <div className="flex flex-col lg:flex-row gap-4">
-            <div className="flex-1">
+            <div className="w-45">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -204,7 +204,7 @@ const ProblemsTable = ({ problems, user }) => {
             </div>
             <div className="flex flex-col sm:flex-row gap-4">
               <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-45">
                   <SelectValue placeholder="Select difficulty" />
                 </SelectTrigger>
                 <SelectContent>
@@ -219,7 +219,7 @@ const ProblemsTable = ({ problems, user }) => {
               </Select>
 
               <Select value={selectedTag} onValueChange={setSelectedTag}>
-                <SelectTrigger className="w-[180px]">
+                <SelectTrigger className="w-45">
                   <SelectValue placeholder="Select tag" />
                 </SelectTrigger>
                 <SelectContent>
@@ -245,7 +245,7 @@ const ProblemsTable = ({ problems, user }) => {
                 <TableHead className="w-[100px]">Solved</TableHead>
                 <TableHead>Title</TableHead>
                 <TableHead>Tags</TableHead>
-                <TableHead className="w-[120px]">Difficulty</TableHead>
+                <TableHead className="w-25 text-sm font-semibold tracking-wider text-muted-foreground">Difficulty</TableHead>
                 <TableHead className="w-[200px]">Actions</TableHead>
               </TableRow>
             </TableHeader>

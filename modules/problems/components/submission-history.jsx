@@ -56,7 +56,7 @@ export const SubmissionHistory = ({ submissions = [] }) => {
         <CardDescription>Your previous submissions for this problem</CardDescription>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[400px] pr-4">
+        <ScrollArea className="h-100 pr-4">
           <div className="space-y-3">
             {submissions.map((submission) => (
               <Card key={submission.id} className="bg-muted/50">
