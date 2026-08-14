@@ -60,7 +60,7 @@ const AddToPlaylistModal = ({ isOpen, onClose, onSubmit, problemId }) => {
             Choose a playlist to add this problem to
           </DialogDescription>
         </DialogHeader>
-        <ScrollArea className="max-h-[300px] w-full pr-4">
+        <ScrollArea className="max-h-75 pr-4">
           {playlists.length > 0 ? (
             <div className="space-y-2">
               {playlists.map((playlist) => (

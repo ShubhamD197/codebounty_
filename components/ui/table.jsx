@@ -91,10 +91,7 @@ function TableCell({
   return (
     <td
       data-slot="table-cell"
-      className={cn(
-        "p-2 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0",
-        className
-      )}
+      className={cn("p-4 align-middle [&:has([role=checkbox])]:pr-0 has-[[role=checkbox]]:pr-0", className)}
       {...props} />
   );
 }
