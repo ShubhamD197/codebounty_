@@ -26,7 +26,7 @@ Know this distinction cold. Interviewers will ask "is this live?" — never blur
 
 ## 1. The 30-Second Elevator Pitch (use this when they say "tell me about a project")
 
-> "I built CodeBounty, a coding practice platform similar to LeetCode, using Next.js, Prisma, PostgreSQL, and Clerk for auth. The core engineering challenge was building a secure code execution pipeline — I integrated Judge0 to compile and run user-submitted code in multiple languages, validate it against hidden test cases, and persist per-test-case results. I also built the admin problem-creation flow, which validates reference solutions against Judge0 *before* saving a problem to the database, so no problem with a broken solution ever gets published. Right now I'm extending it from a generic problem bank into a pattern-first learning platform — the schema groundwork for that is already sketched out."
+> "I built CodeBounty, a Full Stack coding practice platform , using Next.js, PostgreSQL, and Clerk for auth. Integrated Monaco Editor for an in-browser IDE experience and Judge0 for sandboxed multi-language code execution, validating submissions against test cases I also built the admin problem-creation flow, which validates reference solutions against Judge0 *before* saving a problem to the database, so no problem with a broken solution ever gets published. Right now I'm extending it from a generic problem bank into a pattern-first learning platform — the schema groundwork for that is already sketched out."
 
 Practice saying this out loud until it's under 30 seconds without sounding memorized.
 

@@ -1,9 +1,10 @@
 import React from 'react'
 import { SignUp } from '@clerk/nextjs'
+import { authAppearance } from '../../clerk-appearance'
 
 const SignUpPage = () => {
     return (
-        <SignUp />
+        <SignUp appearance={authAppearance} />
     )
 }
 

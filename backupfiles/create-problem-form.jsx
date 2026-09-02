@@ -30,7 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/modules/node_modules/next/navigation";
 
 const problemSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),

@@ -1,59 +1,66 @@
+"use client";
+
 import { Button } from '@/components/ui/button'
-import { ModeToggle } from '@/components/ui/mode-toggle'
 import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
 import { UserRole } from '@prisma/client'
 import Image from 'next/image'
 import Link from 'next/link'
 import React from 'react'
+import { CommandMenu } from './command-menu'
+import { motion } from "motion/react"
 
 const Navbar = ({ userRole }) => {
   return (
-    <nav className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-5xl px-4">
-      <div className="bg-white/10 dark:bg-black/10 backdrop-blur-md border border-white/20 dark:border-white/10 rounded-2xl shadow-lg shadow-black/5 dark:shadow-black/20 transition-all duration-200 hover:bg-white/15 dark:hover:bg-black/15">
-        <div className="px-6 py-4 flex justify-between items-center">
-          <Link href={"/"} className="flex items-center gap-2">
-            <Image src="/logo.svg"
-              alt="CodeBounty"
-              width={42}
-              height={42}
-              className="dark:invert"/>
-            <span className="font-bold text-2xl tracking-widest text-amber-300">
+    <motion.nav 
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.4, ease: "easeOut" }}
+      className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4"
+    >
+      <div className="bg-bg-surface/60 backdrop-blur-xl border border-border rounded-2xl shadow-2xl transition-all duration-300">
+        <div className="px-6 py-3 flex justify-between items-center">
+          <Link href={"/"} className="flex items-center gap-3 group">
+            <div className="relative">
+              <div className="absolute inset-0 bg-accent/20 blur-md rounded-full scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <Image src="/logo.svg"
+                alt="CodeBounty"
+                width={36}
+                height={36}
+                className="dark:invert relative z-10" />
+            </div>
+            <span className="font-bold text-xl tracking-wide text-text-primary">
               CodeBounty
             </span>
           </Link>
 
-          <div className="flex flex-row items-center justify-center gap-x-4">
+          <div className="hidden md:flex flex-row items-center justify-center gap-x-6">
             <Link
               href="/problems"
-              className="text-sm font-medium text-zinc-600 dark:text-zinc-400  hover:text-amber-600 cursor-pointer dark:hover:text-amber-400"
+              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200"
             >
               Problems
             </Link>
             <Link
-              href="/about"
-              className="text-sm font-medium text-zinc-600 dark:text-zinc-400  hover:text-amber-600 cursor-pointer dark:hover:text-amber-400"
-            >
-              About
-            </Link>
-            <Link
               href="/profile"
-              className="text-sm font-medium text-zinc-600 dark:text-zinc-400  hover:text-amber-600 cursor-pointer dark:hover:text-amber-400"
+              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200"
             >
               Profile
             </Link>
-            
           </div>
 
           <div className="flex items-center gap-4">
+            <CommandMenu />
+            
+            <div className="h-4 w-px bg-border hidden sm:block"></div>
+
             <Show when="signed-in">
               {userRole && userRole === UserRole.ADMIN && (
                 <Link href={"/create-problem"}>
-                  <Button variant={"outline"} size={"default"}>
-                    Create Problem
+                  <Button variant={"outline"} size={"sm"} className="border-border hover:border-accent hover:bg-accent/10 transition-colors">
+                    Admin
                   </Button>
                 </Link>
               )}
-              <ModeToggle />
               <UserButton />
             </Show>
 
@@ -63,15 +70,15 @@ const Navbar = ({ userRole }) => {
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-sm font-medium hover:bg-white/20 dark:hover:bg-white/10"
+                    className="text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
                   >
-                    Sign In
+                    Log in
                   </Button>
                 </SignInButton>
                 <SignUpButton>
                   <Button
                     size="sm"
-                    className="text-sm font-medium bg-amber-400 hover:bg-amber-500 text-white"
+                    className="text-sm font-medium bg-accent hover:bg-accent-hover text-white transition-all shadow-[0_0_15px_rgba(139,92,246,0.3)] hover:shadow-[0_0_20px_rgba(167,139,250,0.5)] border-0"
                   >
                     Sign Up
                   </Button>
@@ -81,7 +88,7 @@ const Navbar = ({ userRole }) => {
           </div>
         </div>
       </div>
-    </nav>
+    </motion.nav>
   )
 }
 

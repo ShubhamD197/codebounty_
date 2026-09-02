@@ -3,65 +3,34 @@
 import React, { useState, useMemo } from "react";
 import Link from "next/link";
 import {
-  Bookmark,
-  PencilIcon,
-  Trash,
-  TrashIcon,
-  Plus,
   Search,
-  Filter,
+  CheckCircle2,
+  Code2,
+  AlertCircle,
+  FolderOpen
 } from "lucide-react";
-import AddToPlaylistModal from "./add-to-playlist";
-import CreatePlaylistModal from "./create-playlist";
-import {
-  deleteProblem
-} from "../actions";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "motion/react";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
 
-const ProblemsTable = ({ problems, user }) => {
+export default function ProblemsTable({ problems = [], user }) {
   const [search, setSearch] = useState("");
   const [difficulty, setDifficulty] = useState("ALL");
   const [selectedTag, setSelectedTag] = useState("ALL");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isAddToPlaylistModalOpen, setIsAddToPlaylistModalOpen] =
-    useState(false);
-  const [selectedProblemId, setSelectedProblemId] = useState(null);
 
-  // Extract all unique tags from problems
+  // Extract all unique tags
   const allTags = useMemo(() => {
     if (!Array.isArray(problems)) return [];
     const tagsSet = new Set();
     problems.forEach((p) => p.tags?.forEach((t) => tagsSet.add(t)));
-    return Array.from(tagsSet);
+    return Array.from(tagsSet).sort();
   }, [problems]);
 
-  // Define allowed difficulties
   const difficulties = ["EASY", "MEDIUM", "HARD"];
 
-  // Filter problems based on search, difficulty, and tags
+  // Filter problems
   const filteredProblems = useMemo(() => {
-    return (problems || [])
+    return problems
       .filter((problem) =>
         problem.title.toLowerCase().includes(search.toLowerCase())
       )
@@ -73,325 +42,197 @@ const ProblemsTable = ({ problems, user }) => {
       );
   }, [problems, search, difficulty, selectedTag]);
 
-  // Pagination logic
-  const itemsPerPage = 5;
-  const totalPages = Math.ceil(filteredProblems.length / itemsPerPage);
-  const paginatedProblems = useMemo(() => {
-    return filteredProblems.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage
-    );
-  }, [filteredProblems, currentPage]);
-
-  const handleDelete = async (id) => {
-    const result = await deleteProblem(id);
-    if (result.success) {
-      toast.success(result.message);
-    } else {
-      toast.error(result.error);
-    }
-  };
-
-  const handleCreatePlaylist = async (data) => {
-    try {
-      const response = await fetch("/api/playlists", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.name,
-          description: data.description,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setIsCreateModalOpen(false);
-        toast.success("Playlist created successfully");
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error("Error creating playlist:", error);
-      toast.error(error.message || "Failed to create playlist");
-    }
-  };
-
-  const handleAddToPlaylist = async (problemId, playlistId) => {
-    try {
-      const response = await fetch("/api/playlists/add-problem", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ problemId, playlistId }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setIsAddToPlaylistModalOpen(false);
-        toast.success("Problem added to playlist");
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      console.error("Error adding to playlist:", error);
-      toast.error(error.message || "Failed to add problem to playlist");
-    }
-  };
-
-  const getDifficultyVariant = (difficulty) => {
-    switch (difficulty) {
+  const getDifficultyColor = (diff) => {
+    switch (diff) {
       case "EASY":
-        return "default";
+        return "bg-success/10 text-success border-success/20";
       case "MEDIUM":
-        return "secondary";
+        return "bg-pending/10 text-pending border-pending/20";
       case "HARD":
-        return "destructive";
+        return "bg-error/10 text-error border-error/20";
       default:
-        return "outline";
+        return "bg-bg-elevated text-text-secondary border-border";
     }
   };
 
-  const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case "EASY":
-        return "bg-green-100 text-green-800 hover:bg-green-100";
-      case "MEDIUM":
-        return "bg-yellow-100 text-yellow-800 hover:bg-yellow-100";
-      case "HARD":
-        return "bg-red-100 text-red-800 hover:bg-red-100";
-      default:
-        return "";
-    }
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } },
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto space-y-8 p-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Problems</h1>
-          <p className="text-muted-foreground">
-            Manage and solve coding problems
-          </p>
+    <div className="w-full flex flex-col">
+      {/* HEADER: Mini Hero (Generous Spacing) */}
+      <div className="mb-16">
+        <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-text-primary mb-4">
+          Algorithm Catalog
+        </h1>
+        <p className="text-lg text-text-muted max-w-2xl">
+          Explore and master essential data structures and patterns. Filter by difficulty, tag, or search directly for a challenge.
+        </p>
+
+        {/* Filters & Search */}
+        <div className="mt-10 flex flex-col md:flex-row gap-4 items-start md:items-center">
+          <div className="relative w-full md:max-w-md group">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-text-muted group-focus-within:text-accent transition-colors" />
+            <Input
+              placeholder="Search problems..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10 h-12 bg-bg-surface border-border text-text-primary placeholder:text-text-muted focus-visible:ring-1 focus-visible:ring-accent focus-visible:border-accent transition-all rounded-xl"
+            />
+          </div>
+
+          <div className="flex flex-wrap gap-2 w-full md:w-auto">
+            {/* Difficulty Toggle */}
+            <div className="flex bg-bg-surface border border-border p-1 rounded-xl h-12 items-center">
+              <button
+                onClick={() => setDifficulty("ALL")}
+                className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                  difficulty === "ALL" ? "bg-bg-elevated text-text-primary" : "text-text-muted hover:text-text-primary"
+                }`}
+              >
+                All
+              </button>
+              {difficulties.map((diff) => (
+                <button
+                  key={diff}
+                  onClick={() => setDifficulty(diff)}
+                  className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${
+                    difficulty === diff ? "bg-bg-elevated text-text-primary" : "text-text-muted hover:text-text-primary"
+                  }`}
+                >
+                  {diff.toLowerCase()}
+                </button>
+              ))}
+            </div>
+            
+            {/* Simple Tag Select (if tags exist) */}
+            {allTags.length > 0 && (
+              <select 
+                value={selectedTag}
+                onChange={(e) => setSelectedTag(e.target.value)}
+                className="h-12 bg-bg-surface border border-border text-text-secondary text-sm rounded-xl px-4 focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
+              >
+                <option value="ALL">All Tags</option>
+                {allTags.map((tag) => (
+                  <option key={tag} value={tag}>{tag}</option>
+                ))}
+              </select>
+            )}
+          </div>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Create Playlist
-        </Button>
       </div>
 
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            <h3 className="text-lg font-medium">Filters</h3>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col lg:flex-row gap-4">
-            <div className="w-45">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search by title..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Select value={difficulty} onValueChange={setDifficulty}>
-                <SelectTrigger className="w-45">
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Difficulties</SelectItem>
-                  {difficulties.map((diff) => (
-                    <SelectItem key={diff} value={diff}>
-                      {diff.charAt(0).toUpperCase() +
-                        diff.slice(1).toLowerCase()}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+      {/* PROBLEM LIST: Data Dense (Tight Spacing) */}
+      <div className="w-full">
+        {/* Desktop Header Row */}
+        <div className="hidden md:grid grid-cols-[40px_1fr_120px_200px] gap-4 px-4 py-3 border-b border-border text-xs font-semibold tracking-wider text-text-muted uppercase">
+          <div className="text-center">Status</div>
+          <div>Title</div>
+          <div>Difficulty</div>
+          <div>Tags</div>
+        </div>
 
-              <Select value={selectedTag} onValueChange={setSelectedTag}>
-                <SelectTrigger className="w-45">
-                  <SelectValue placeholder="Select tag" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ALL">All Tags</SelectItem>
-                  {allTags.map((tag) => (
-                    <SelectItem key={tag} value={tag}>
-                      {tag}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Table */}
-      <Card>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-[100px]">Solved</TableHead>
-                <TableHead>Title</TableHead>
-                <TableHead>Tags</TableHead>
-                <TableHead className="w-25 text-sm font-semibold tracking-wider text-muted-foreground">Difficulty</TableHead>
-                <TableHead className="w-[200px]">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedProblems.length > 0 ? (
-                paginatedProblems.map((problem) => {
-                  const isSolved = problem.solvedBy.length > 0;
-                  return (
-                    <TableRow key={problem.id}>
-                      <TableCell>
-                        <Checkbox
-                          checked={isSolved}
-                          disabled
-                          className="data-[state=checked]:bg-green-600 data-[state=checked]:border-green-600"
-                        />
-                      </TableCell>
-                      <TableCell className="font-medium">
-                        <Link
-                          href={`/problem/${problem.id}`}
-                          className="text-primary hover:underline transition-colors"
-                        >
-                          {problem.title}
-                        </Link>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {(problem.tags || []).map((tag, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="outline"
-                              className="text-xs bg-orange-50 text-orange-700 border-orange-200 hover:bg-orange-50"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
+        {/* Rows */}
+        <div className="flex flex-col">
+          <AnimatePresence mode="popLayout">
+            {filteredProblems.length > 0 ? (
+              filteredProblems.map((problem, index) => {
+                const isSolved = problem.solvedBy?.length > 0;
+                return (
+                  <Link href={`/problem/${problem.id}`} key={problem.id}>
+                    <motion.div
+                      variants={itemVariants}
+                      initial="hidden"
+                      whileInView="visible"
+                      viewport={{ once: true, margin: "-50px" }}
+                      transition={{ delay: (index % 10) * 0.03 }} // Fast stagger
+                      whileHover={{ scale: 0.995, backgroundColor: "var(--bg-elevated)" }}
+                      className="group grid grid-cols-1 md:grid-cols-[40px_1fr_120px_200px] gap-2 md:gap-4 px-4 py-3 md:py-2.5 border-b border-border items-center cursor-pointer transition-colors"
+                    >
+                      {/* Mobile Title Row */}
+                      <div className="md:hidden flex justify-between items-center mb-1">
+                        <div className="flex items-center gap-2">
+                          {isSolved ? (
+                            <CheckCircle2 className="h-4 w-4 text-success flex-shrink-0" />
+                          ) : (
+                            <div className="h-4 w-4 flex-shrink-0" />
+                          )}
+                          <span className="font-medium text-text-primary text-base">
+                            {problem.title}
+                          </span>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          className={`${getDifficultyColor(
-                            problem.difficulty
-                          )} border-0 font-medium`}
-                        >
+                        <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 text-[10px] font-mono uppercase ${getDifficultyColor(problem.difficulty)}`}>
                           {problem.difficulty}
                         </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          {user?.role === "ADMIN" && (
-                            <>
-                              <Button
-                                variant="destructive"
-                                size="sm"
-                                onClick={() => handleDelete(problem.id)}
-                              >
-                                <TrashIcon className="h-4 w-4" />
-                              </Button>
-                              <Button variant="outline" size="sm" disabled>
-                                <PencilIcon className="h-4 w-4" />
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedProblemId(problem.id);
-                              setIsAddToPlaylistModalOpen(true);
-                            }}
-                            className="gap-2"
-                          >
-                            <Bookmark className="h-4 w-4" />
-                            <span className="hidden sm:inline">Save</span>
-                          </Button>
+                      </div>
+                      
+                      {/* Mobile Tags Row */}
+                      <div className="md:hidden pl-6">
+                        <div className="flex flex-wrap gap-1.5">
+                          {(problem.tags || []).slice(0, 3).map((tag, idx) => (
+                            <span key={idx} className="text-xs text-text-muted bg-bg-surface px-2 py-0.5 rounded-md border border-border">
+                              {tag}
+                            </span>
+                          ))}
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={5}
-                    className="text-center py-8 text-muted-foreground"
-                  >
-                    <div className="flex flex-col items-center gap-2">
-                      <Search className="h-8 w-8 opacity-50" />
-                      <p>No problems found matching your criteria.</p>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                      </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between">
-          <p className="text-sm text-muted-foreground">
-            Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
-            {Math.min(currentPage * itemsPerPage, filteredProblems.length)} of{" "}
-            {filteredProblems.length} problems
-          </p>
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev) => prev - 1)}
-            >
-              Previous
-            </Button>
-            <div className="flex items-center gap-1">
-              <span className="text-sm font-medium">
-                Page {currentPage} of {totalPages}
-              </span>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={currentPage === totalPages}
-              onClick={() => setCurrentPage((prev) => prev + 1)}
-            >
-              Next
-            </Button>
-          </div>
+                      {/* Desktop Layout */}
+                      <div className="hidden md:flex justify-center">
+                        {isSolved ? (
+                          <CheckCircle2 className="h-5 w-5 text-success group-hover:scale-110 transition-transform" />
+                        ) : (
+                          <div className="h-5 w-5 rounded-full border border-border/50 group-hover:border-accent/50 transition-colors"></div>
+                        )}
+                      </div>
+                      <div className="hidden md:flex font-medium text-text-primary text-sm group-hover:text-accent transition-colors truncate pr-4">
+                        {problem.title}
+                      </div>
+                      <div className="hidden md:flex">
+                        <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 text-xs font-mono font-medium tracking-tight border ${getDifficultyColor(problem.difficulty)}`}>
+                          {problem.difficulty.charAt(0).toUpperCase() + problem.difficulty.slice(1).toLowerCase()}
+                        </Badge>
+                      </div>
+                      <div className="hidden md:flex flex-wrap gap-1.5 items-center">
+                        {(problem.tags || []).slice(0, 3).map((tag, idx) => (
+                          <span key={idx} className="text-[11px] font-mono text-text-muted bg-bg-surface px-2 py-0.5 rounded border border-border">
+                            {tag}
+                          </span>
+                        ))}
+                        {(problem.tags?.length || 0) > 3 && (
+                          <span className="text-[11px] text-text-muted">+{problem.tags.length - 3}</span>
+                        )}
+                      </div>
+                    </motion.div>
+                  </Link>
+                );
+              })
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="py-24 flex flex-col items-center justify-center text-center"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-bg-elevated border border-border flex items-center justify-center mb-6">
+                  <FolderOpen className="h-8 w-8 text-text-muted" />
+                </div>
+                <h3 className="text-xl font-semibold text-text-primary mb-2">No problems found</h3>
+                <p className="text-text-muted max-w-sm">
+                  We couldn't find any problems matching your current filters. Try adjusting your search criteria.
+                </p>
+                <button 
+                  onClick={() => { setSearch(""); setDifficulty("ALL"); setSelectedTag("ALL"); }}
+                  className="mt-6 text-sm text-accent hover:text-accent-hover font-medium"
+                >
+                  Clear all filters
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
-      )}
-
-      {/* Modals */}
-      <CreatePlaylistModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onSubmit={handleCreatePlaylist}
-      />
-
-      <AddToPlaylistModal
-        isOpen={isAddToPlaylistModalOpen}
-        onClose={() => setIsAddToPlaylistModalOpen(false)}
-        onSubmit={handleAddToPlaylist}
-        problemId={selectedProblemId}
-      />
+      </div>
     </div>
   );
-};
-
-export default ProblemsTable;
+}

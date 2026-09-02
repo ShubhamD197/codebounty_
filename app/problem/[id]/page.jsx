@@ -1,18 +1,18 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import Editor from "@monaco-editor/react";
-
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { motion, AnimatePresence } from "motion/react";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  ResizableHandle,
+  ResizablePanel,
+  ResizablePanelGroup,
+} from "@/components/ui/resizable";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -20,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Play,
   Send,
@@ -30,129 +29,54 @@ import {
   Trophy,
   ArrowLeft,
   Loader2,
+  Terminal,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react";
-
-import { cn } from "@/lib/utils";
-import { ModeToggle } from "@/components/ui/mode-toggle";
-
-import { getJudge0LanguageId } from "@/lib/judge0/judge0";
 import { toast } from "sonner";
 import Link from "next/link";
+import { cn } from "@/lib/utils";
+
 import {
   runCode,
   submitCode,
   getAllSubmissionByCurrentUserForProblem,
   getProblemById,
 } from "@/modules/problems/actions";
-
-// import { SubmissionDetails } from "@/modules/problems/components/submission-details";
-import { TestCaseTable } from "@/modules/problems/components/test-case-table";
+import { getJudge0LanguageId } from "@/lib/judge0/judge0";
 import { SubmissionHistory } from "@/modules/problems/components/submission-history";
 
 const getDifficultyColor = (difficulty) => {
   switch (difficulty) {
     case "EASY":
-      return "bg-green-100 text-green-800 border-green-200";
+      return "bg-success/10 text-success border-success/20";
     case "MEDIUM":
-      return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      return "bg-pending/10 text-pending border-pending/20";
     case "HARD":
-      return "bg-red-100 text-red-800 border-red-200";
+      return "bg-error/10 text-error border-error/20";
     default:
-      return "bg-gray-100 text-gray-800 border-gray-200";
+      return "bg-bg-elevated text-text-secondary border-border";
   }
 };
 
-const SubmissionResultSummary = ({ submission }) => {
-  const {
-    status,
-    passedTestCases,
-    totalTestCases,
-    performance,
-  } = submission;
-
-  const isAccepted = status === "Accepted";
-
-  return (
-    <Card className="mt-4">
-      <CardHeader>
-        <CardTitle
-          className={
-            isAccepted
-              ? "text-green-500"
-              : "text-red-500"
-          }
-        >
-          {status}
-        </CardTitle>
-
-        <CardDescription>
-          {passedTestCases} / {totalTestCases} test cases passed
-        </CardDescription>
-      </CardHeader>
-
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
-
-          <div className="rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">
-              Test Cases
-            </p>
-
-            <p className="text-xl font-semibold">
-              {passedTestCases} / {totalTestCases}
-            </p>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">
-              Status
-            </p>
-
-            <p className="text-xl font-semibold">
-              {status}
-            </p>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">
-              Runtime
-            </p>
-
-            <p className="text-xl font-semibold">
-              {performance?.time?.length
-                ? performance.time[0]
-                : "N/A"}
-            </p>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <p className="text-sm text-muted-foreground">
-              Memory
-            </p>
-
-            <p className="text-xl font-semibold">
-              {performance?.memory?.length
-                ? performance.memory[0]
-                : "N/A"}
-            </p>
-          </div>
-
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
-const ProblemIdPage = ({ params }) => {
+export default function ProblemIdPage({ params }) {
   const [problem, setProblem] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState("JAVASCRIPT");
   const [code, setCode] = useState("");
-  const [output, setOutput] = useState("");
-  const [isRunning, setIsRunning] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isEditorFocused, setIsEditorFocused] = useState(false);
   const [submissionHistory, setSubmissionHistory] = useState([]);
-  const [executionResponse, setExecutionResponse] = useState(null);
-  const { theme } = useTheme();
+
+  // Execution states: "IDLE", "RUNNING", "ACCEPTED", "WRONG_ANSWER", "ERROR", "TLE"
+  const [executionState, setExecutionState] = useState("IDLE");
+  const [executionData, setExecutionData] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [problemStatus, setProblemStatus] = useState("unsolved");
+  const [activeTab, setActiveTab] = useState("description");
+  const [expandedTestCases, setExpandedTestCases] = useState({});
 
   useEffect(() => {
     const fetchProblem = async () => {
@@ -160,36 +84,33 @@ const ProblemIdPage = ({ params }) => {
         const resolvedParams = await params;
         const problemData = await getProblemById(resolvedParams.id);
         if (problemData.success) {
-          console.log(problemData.data);
           setProblem(problemData.data);
-
           setCode(problemData.data.codeSnippets[selectedLanguage] || "");
         }
       } catch (error) {
         console.error("Error fetching problem:", error);
       }
     };
-
     fetchProblem();
   }, [params]);
 
   useEffect(() => {
-    const fetchSubmissionHistory = async () => {
+    const fetchHistory = async () => {
       try {
         const resolvedParams = await params;
-        const submissionHistory = await getAllSubmissionByCurrentUserForProblem(resolvedParams.id);
-        console.log(submissionHistory);
-        if (submissionHistory.success) {
-          setSubmissionHistory(submissionHistory.data);
+        const history = await getAllSubmissionByCurrentUserForProblem(resolvedParams.id);
+        if (history.success) {
+          setSubmissionHistory(history.data);
+          if (history.data.some(sub => sub.status === "Accepted")) {
+            setProblemStatus("solved");
+          }
         }
       } catch (error) {
-        console.error('Error fetching problem:', error);
+        console.error("Error fetching history:", error);
       }
-    }
-
-    fetchSubmissionHistory();
-  }, [params])
-
+    };
+    fetchHistory();
+  }, [params]);
 
   useEffect(() => {
     if (problem && problem.codeSnippets[selectedLanguage]) {
@@ -197,379 +118,491 @@ const ProblemIdPage = ({ params }) => {
     }
   }, [selectedLanguage, problem]);
 
+  const processExecutionResponse = (res, isSubmit) => {
+    setExecutionData(res);
+
+    // Status can be: "Accepted", "Wrong Answer", "Time Limit Exceeded", "Compilation Error", "Runtime Error" etc.
+    let status = res.status || (res.submission && res.submission.status) || "Error";
+    let isAccepted = status === "Accepted";
+
+    // If it's a RUN (not submit), verify all tests passed explicitly
+    if (!isSubmit && res.submission?.testCases) {
+      isAccepted = res.submission.testCases.every((tc) => tc.passed);
+      status = isAccepted ? "Accepted" : "Wrong Answer";
+      if (!isAccepted && res.submission.testCases.some((tc) => tc.status?.description?.includes("Time"))) {
+        status = "Time Limit Exceeded";
+      } else if (!isAccepted && res.submission.testCases.some((tc) => tc.status?.id >= 6)) {
+        status = "Error"; // Compilation/Runtime
+      }
+    }
+
+    if (status === "Accepted") {
+      setExecutionState("ACCEPTED");
+      toast.success(isSubmit ? "Solution Accepted!" : "All test cases passed", {
+        className: "bg-success/10 border-success text-success",
+      });
+      if (isSubmit) setProblemStatus("solved");
+    } else if (status === "Wrong Answer") {
+      setExecutionState("WRONG_ANSWER");
+      toast.error("Wrong Answer");
+    } else if (status.includes("Time Limit")) {
+      setExecutionState("TLE");
+      toast.error("Time Limit Exceeded");
+    } else {
+      setExecutionState("ERROR");
+      toast.error("Execution Failed");
+    }
+  };
+
   const handleRun = async () => {
     try {
-      setIsRunning(true);
-
+      setExecutionState("RUNNING");
       const language_id = getJudge0LanguageId(selectedLanguage);
-
-      const res = await runCode(
-        code,
-        language_id,
-        problem.id
-      );
+      const res = await runCode(code, language_id, problem.id);
 
       if (!res.success) {
-        toast.error(res.error || "Failed to run code");
-        setExecutionResponse(null);
+        setExecutionState("ERROR");
+        setExecutionData({ error: res.error || "Failed to run code" });
         return;
       }
-
-      setExecutionResponse({
-        type: "run",
-        submission: res.submission,
-      });
-
-      if (res.message) {
-        if (res.submission.testCases.every((testCase) => testCase.passed)) {
-          toast.success(res.message);
-        } else {
-          toast.error(res.message);
-        }
-      }
+      processExecutionResponse(res, false);
     } catch (error) {
-      console.error("Error running code:", error);
-      toast.error(error.message || "Failed to run code");
-    } finally {
-      setIsRunning(false);
+      setExecutionState("ERROR");
+      setExecutionData({ error: error.message });
     }
   };
 
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
-
+      setExecutionState("RUNNING");
       const language_id = getJudge0LanguageId(selectedLanguage);
-
-      const res = await submitCode(
-        code,
-        language_id,
-        problem.id
-      );
+      const res = await submitCode(code, language_id, problem.id);
 
       if (!res.success) {
-        toast.error(res.error || "Failed to submit code");
+        setExecutionState("ERROR");
+        setExecutionData({ error: res.error || "Failed to submit code" });
+        setIsSubmitting(false);
         return;
       }
 
-      setExecutionResponse({
-        type: "submit",
-        submission: res,
-      });
+      processExecutionResponse(res, true);
 
-      if (res.status === "Accepted") {
-        toast.success("Accepted");
-      } else {
-        toast.error("Wrong Answer");
-      }
-
-      // Refresh submission history after a real submission
       const resolvedParams = await params;
-
-      const history =
-        await getAllSubmissionByCurrentUserForProblem(
-          resolvedParams.id
-        );
-
+      const history = await getAllSubmissionByCurrentUserForProblem(resolvedParams.id);
       if (history.success) {
         setSubmissionHistory(history.data);
       }
     } catch (error) {
-      console.error("Error submitting code:", error);
-      toast.error(error.message || "Failed to submit code");
+      setExecutionState("ERROR");
+      setExecutionData({ error: error.message });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const toggleTestCase = (idx) => {
+    setExpandedTestCases(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
+
   if (!problem) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen">
-        <Loader2 className="animate-spin size-5 text-amber-400" />
+      <div className="flex flex-col items-center justify-center h-screen bg-bg-base">
+        <Loader2 className="animate-spin h-6 w-6 text-accent" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto p-6">
-        {/* header */}
-        <div className="mb-6 flex items-start justify-between">
-          <div>
-            <div className="flex items-center gap-4 mb-4">
-              <Link href="/">
-                <Button variant="outline" size="icon">
-                  <ArrowLeft className="size-4" />
-                </Button>
-              </Link>
-              <h1 className="text-3xl font-bold">{problem?.title}</h1>
-              <Badge
-                className={cn(
-                  "font-medium",
-                  getDifficultyColor(problem?.difficulty)
-                )}
-              >
-                {problem?.difficulty}
-              </Badge>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {problem?.tags.map((tag) => (
-                <Badge key={tag} variant="outline" className="text-sm">
-                  {tag}
-                </Badge>
+    <div className="flex flex-col h-screen w-full bg-bg-base text-text-primary overflow-hidden">
+      {/* TOP BAR */}
+      <div className="h-14 flex items-center justify-between px-4 border-b border-border bg-bg-surface/50 backdrop-blur-md z-10 shrink-0">
+        <div className="flex items-center gap-4">
+          <Link href="/problems">
+            <Button variant="ghost" size="icon" className="hover:bg-bg-elevated text-text-muted hover:text-text-primary h-8 w-8">
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+          </Link>
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold tracking-tight">{problem.title}</h1>
+            <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 text-xs font-mono font-medium border ${getDifficultyColor(problem.difficulty)}`}>
+              {problem.difficulty}
+            </Badge>
+            <AnimatePresence>
+              {problemStatus === "solved" && (
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                >
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={handleRun}
+              disabled={executionState === "RUNNING"}
+              variant="ghost"
+              className="flex items-center gap-2 h-9 text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
+            >
+              {executionState === "RUNNING" && !isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Play className="h-4 w-4" />
+              )}
+              Run
+            </Button>
+          </motion.div>
+          <motion.div whileTap={{ scale: 0.98 }}>
+            <Button
+              onClick={handleSubmit}
+              disabled={executionState === "RUNNING"}
+              className="flex items-center gap-2 h-9 bg-accent hover:bg-accent-hover text-white shadow-[0_0_10px_rgba(139,92,246,0.2)] hover:shadow-[0_0_15px_rgba(167,139,250,0.4)] transition-all border-0"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
+              Submit
+            </Button>
+          </motion.div>
+        </div>
+      </div>
+
+      {/* SPLIT VIEW */}
+      <div className="flex-1 h-[calc(100vh-3.5rem)] overflow-hidden">
+        <ResizablePanelGroup direction="horizontal" className="h-full">
+          {/* LEFT PANEL: Description */}
+          <ResizablePanel defaultSize={40} minSize={30} className="bg-bg-surface flex flex-col h-full border-r border-border">
+            <div className="flex border-b border-border px-2">
+              {['description', 'submissions', 'hints'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`relative px-4 py-3 text-sm font-medium transition-colors ${activeTab === tab ? "text-text-primary" : "text-text-muted hover:text-text-secondary"
+                    }`}
+                >
+                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                  {activeTab === tab && (
+                    <motion.div
+                      layoutId="activeTabIndicator"
+                      className="absolute bottom-0 left-0 right-0 h-[2px] bg-accent"
+                      initial={false}
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </button>
               ))}
             </div>
-          </div>
-          <ModeToggle />
-        </div>
 
-        <div className="grid lg:grid-cols-2 gap-6">
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <FileText className="h-5 w-5" />
-                  Problem Description
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <p className="text-foreground leading-relaxed">
-                    {problem?.description}
-                  </p>
-
-                  {/* Examples */}
-                  <div>
-                    <h3 className="font-semibold text-lg mb-3">Example:</h3>
-                    {problem?.examples[selectedLanguage] && (
-                      <div className="bg-muted p-4 rounded-lg space-y-2">
-                        <div>
-                          <span className="font-medium text-amber-400">
-                            Input:{" "}
-                          </span>
-                          <code className="text-sm dark:bg-zinc-900 bg-zinc-200 text-zinc-900 dark:text-zinc-200 px-2 py-1 rounded">
-                            {problem?.examples[selectedLanguage].input}
-                          </code>
-                        </div>
-                        <div>
-                          <span className="font-medium text-amber-400">
-                            Output:{" "}
-                          </span>
-                          <code className="text-sm dark:bg-zinc-900 bg-zinc-200 text-zinc-900 dark:text-zinc-200 px-2 py-1 rounded">
-                            {problem?.examples[selectedLanguage].output}
-                          </code>
-                        </div>
-                        <div>
-                          <span className="font-medium">Explanation: </span>
-                          <span className="text-sm">
-                            {problem?.examples[selectedLanguage]?.explanation}
-                          </span>
-                        </div>
+            <ScrollArea className="flex-1">
+              <div className="p-6">
+                <AnimatePresence mode="wait">
+                  {activeTab === 'description' && (
+                    <motion.div
+                      key="description"
+                      initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                      transition={{ duration: 0.2 }}
+                      className="space-y-8"
+                    >
+                      <div className="text-text-secondary leading-relaxed text-sm">
+                        {problem.description}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Constraints */}
-                  <div>
-                    <h3 className="font-semibold text-lg mb-3">Constraints:</h3>
-                    <div className="bg-muted p-4 rounded-lg">
-                      <pre className="text-sm text-muted-foreground whitespace-pre-wrap">
-                        {problem?.constraints}
-                      </pre>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardContent className="p-3">
-                <Tabs defaultValue="submissions" className="w-full">
-                  <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger
-                      value="submissions"
-                      className="flex items-center gap-2"
-                    >
-                      <Trophy className="h-4 w-4" />
-                      Submissions
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="editorial"
-                      className="flex items-center gap-2"
-                    >
-                      <FileText className="h-4 w-4" />
-                      Editorial
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value="hints"
-                      className="flex items-center gap-2"
-                    >
-                      <Lightbulb className="h-4 w-4" />
-                      Hints
-                    </TabsTrigger>
-                  </TabsList>
-                  <TabsContent value="submissions" className="p-6">
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>Submission History</p>
-                      <SubmissionHistory submissions={submissionHistory} />
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="editorial" className="p-6">
-                    <div className="text-center py-8 text-muted-foreground">
-                      {problem.editorial
-                        ? problem.editorial
-                        : "Editorial not available yet."}
-                    </div>
-                  </TabsContent>
-                  <TabsContent value="hints" className="p-6">
-                    <div className="text-center py-8 text-muted-foreground">
-                      {problem.hints
-                        ? problem.hints
-                        : "No hints available for this problem."}
-                    </div>
-                  </TabsContent>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Code className="h-5 w-5" />
-                    Code Editor
-                  </CardTitle>
-                  <Select
-                    value={selectedLanguage}
-                    onValueChange={setSelectedLanguage}
-                  >
-                    <SelectTrigger className="w-32">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="JAVASCRIPT">JavaScript</SelectItem>
-                      <SelectItem value="PYTHON">Python</SelectItem>
-                      <SelectItem value="JAVA">Java</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="border rounded-lg overflow-hidden">
-                  <Editor
-                    height="400px"
-                    language={
-                      selectedLanguage.toLowerCase() === "javascript"
-                        ? "javascript"
-                        : selectedLanguage.toLowerCase()
-                    }
-                    value={code}
-                    onChange={(value) => setCode(value || "")}
-                    theme={theme === "dark" ? "vs-dark" : "light"}
-                    options={{
-                      minimap: { enabled: false },
-                      fontSize: 16,
-                      lineNumbers: "on",
-                      roundedSelection: false,
-                      scrollBeyondLastLine: false,
-                      automaticLayout: true,
-                      tabSize: 2,
-                      wordWrap: "on",
-                    }}
-                  />
-                </div>
-                <div className="flex gap-3 mt-4">
-                  <Button
-                    onClick={handleRun}
-                    disabled={isRunning}
-                    variant="outline"
-                    className="flex items-center gap-2"
-                  >
-                    <Play className="h-4 w-4" />
-                    {isRunning ? "Running..." : "Run"}
-                  </Button>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={isSubmitting}
-                    className="flex items-center gap-2"
-                  >
-                    <Send className="h-4 w-4" />
-                    {isSubmitting ? "Submitting..." : "Submit"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Test Cases</CardTitle>
-                <CardDescription>
-                  Run your code against these test cases
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ScrollArea className="h-48">
-                  <div className="space-y-4">
-                    {problem.testCases
-                      .filter((testCase) => testCase.isHidden === false)
-                      .map((testCase, index) => (
-                        <div key={index} className="border rounded-lg p-3">
-                          <div className="text-sm font-medium mb-2">
-                            Test Case {index + 1}
+                      <div className="space-y-4">
+                        <h3 className="font-semibold text-text-primary">Examples</h3>
+                        {problem.examples && Object.values(problem.examples).map((ex, idx) => (
+                          <div key={idx} className="bg-bg-elevated p-4 rounded-xl border border-border space-y-3 font-mono text-xs">
+                            <div>
+                              <span className="text-text-muted block mb-1">Input:</span>
+                              <span className="text-text-primary">{ex.input}</span>
+                            </div>
+                            <div>
+                              <span className="text-text-muted block mb-1">Output:</span>
+                              <span className="text-text-primary">{ex.output}</span>
+                            </div>
+                            {ex.explanation && (
+                              <div>
+                                <span className="text-text-muted block mb-1">Explanation:</span>
+                                <span className="text-text-secondary font-sans">{ex.explanation}</span>
+                              </div>
+                            )}
                           </div>
+                        ))}
+                      </div>
 
-                          <div className="space-y-1 text-sm">
-                            <div>
-                              <span className="text-muted-foreground">
-                                Input:{" "}
-                              </span>
-
-                              <code className="bg-muted px-2 py-1 rounded text-xs">
-                                {testCase.input}
-                              </code>
-                            </div>
-
-                            <div>
-                              <span className="text-muted-foreground">
-                                Expected:{" "}
-                              </span>
-
-                              <code className="bg-muted px-2 py-1 rounded text-xs">
-                                {testCase.output}
-                              </code>
-                            </div>
+                      {problem.constraints && (
+                        <div className="space-y-4">
+                          <h3 className="font-semibold text-text-primary">Constraints</h3>
+                          <div className="bg-bg-elevated p-4 rounded-xl border border-border">
+                            <pre className="text-xs text-text-secondary font-mono whitespace-pre-wrap">
+                              {problem.constraints}
+                            </pre>
                           </div>
                         </div>
-                      ))}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
+                      )}
+                    </motion.div>
+                  )}
 
-            {/* Test Results and Submission Details */}
-            {executionResponse?.type === "run" &&
-              executionResponse.submission?.testCases && (
-                <div className="space-y-4 mt-4">
-                  <TestCaseTable
-                    testCases={executionResponse.submission.testCases}
-                  />
+                  {activeTab === 'submissions' && (
+                    <motion.div key="submissions" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+                      {submissionHistory.length > 0 ? (
+                        <SubmissionHistory submissions={submissionHistory} />
+                      ) : (
+                        <div className="text-center py-12 text-text-muted">No submissions yet.</div>
+                      )}
+                    </motion.div>
+                  )}
+
+                  {activeTab === 'hints' && (
+                    <motion.div key="hints" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                      <div className="p-4 bg-bg-elevated rounded-xl border border-border text-sm text-text-secondary">
+                        {problem.hints || "No hints available for this problem."}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </ScrollArea>
+          </ResizablePanel>
+
+          <ResizableHandle className="w-1 bg-border hover:bg-accent/50 transition-colors" />
+
+          {/* RIGHT PANEL: Editor + Console */}
+          <ResizablePanel defaultSize={60} minSize={30} className="flex flex-col h-full bg-bg-base">
+
+            {/* Editor Area */}
+            <div className={`flex-1 flex flex-col transition-colors duration-300 ${isEditorFocused ? 'ring-1 ring-inset ring-accent/30' : ''}`}>
+              <div className="flex items-center justify-between px-4 py-2 border-b border-border bg-bg-surface/30">
+                <div className="flex items-center gap-2 text-text-muted text-sm font-medium">
+                  <Code className="h-4 w-4" />
+                  Code
                 </div>
-              )}
-
-            {executionResponse?.type === "submit" &&
-              executionResponse.submission && (
-                <SubmissionResultSummary
-                  submission={executionResponse.submission}
+                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                  <SelectTrigger className="w-[140px] h-7 text-xs bg-bg-elevated border-border text-text-secondary focus:ring-accent">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="JAVASCRIPT">JavaScript</SelectItem>
+                    <SelectItem value="PYTHON">Python</SelectItem>
+                    <SelectItem value="JAVA">Java</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex-1 relative" onFocus={() => setIsEditorFocused(true)} onBlur={() => setIsEditorFocused(false)}>
+                <Editor
+                  height="100%"
+                  language={selectedLanguage.toLowerCase()}
+                  value={code}
+                  onChange={(v) => setCode(v || "")}
+                  theme="vs-dark"
+                  options={{
+                    minimap: { enabled: false },
+                    fontSize: 14,
+                    fontFamily: "var(--font-jetbrains-mono), monospace",
+                    lineNumbers: "on",
+                    roundedSelection: false,
+                    scrollBeyondLastLine: false,
+                    padding: { top: 16 },
+                    wordWrap: "on",
+                    cursorBlinking: "smooth",
+                    cursorSmoothCaretAnimation: "on",
+                    formatOnPaste: true,
+                  }}
                 />
-              )}
+              </div>
+            </div>
 
-          </div>
-        </div>
+            {/* Console Panel */}
+            <div className="h-64 shrink-0 border-t border-border bg-bg-surface flex flex-col">
+              <div className="flex items-center px-4 py-2 border-b border-border bg-bg-elevated/50">
+                <div className="text-xs font-medium text-text-muted flex items-center gap-2">
+                  <Terminal className="h-4 w-4" />
+                  Console
+                </div>
+              </div>
+
+              <ScrollArea className="flex-1">
+                <div className="p-4">
+                  <AnimatePresence mode="wait">
+
+                    {/* IDLE STATE */}
+                    {executionState === "IDLE" && (
+                      <motion.div
+                        key="idle"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="h-full flex flex-col items-center justify-center text-text-muted pt-8"
+                      >
+                        <Terminal className="h-8 w-8 mb-3 opacity-20" />
+                        <p className="text-sm">Run your code to see results here</p>
+                      </motion.div>
+                    )}
+
+                    {/* RUNNING STATE */}
+                    {executionState === "RUNNING" && (
+                      <motion.div
+                        key="running"
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        className="flex items-center gap-3 pt-4 pl-2"
+                      >
+                        <motion.div
+                          animate={{ scale: [1, 1.15, 1] }}
+                          transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+                          className="h-3 w-3 rounded-full bg-pending shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                        />
+                        <span className="text-sm font-medium text-pending">Executing...</span>
+                      </motion.div>
+                    )}
+
+                    {/* ACCEPTED STATE */}
+                    {executionState === "ACCEPTED" && (
+                      <motion.div
+                        key="accepted"
+                        initial={{ opacity: 0, scale: 0.98, y: 5 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <motion.div
+                          initial={{ boxShadow: "0 0 0 rgba(34,197,94,0)" }}
+                          animate={{ boxShadow: ["0 0 0 rgba(34,197,94,0)", "0 0 20px rgba(34,197,94,0.2)", "0 0 0 rgba(34,197,94,0)"] }}
+                          transition={{ duration: 1, ease: "easeOut" }}
+                          className="bg-success/5 border border-border border-l-2 border-l-success rounded-lg p-4 mb-4"
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <CheckCircle2 className="h-5 w-5 text-success" />
+                            <h3 className="font-semibold text-success">Accepted</h3>
+                          </div>
+                          {executionData?.submission && (
+                            <div className="flex gap-6 mt-4 text-xs font-mono text-text-muted">
+                              <div>
+                                <span className="block mb-1 opacity-60">Runtime</span>
+                                <span className="text-text-primary">
+                                  {executionData.submission.performance?.time?.[0] || executionData.submission.time || "N/A"}
+                                </span>
+                              </div>
+                              <div>
+                                <span className="block mb-1 opacity-60">Memory</span>
+                                <span className="text-text-primary">
+                                  {executionData.submission.performance?.memory?.[0] || executionData.submission.memory || "N/A"}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </motion.div>
+                      </motion.div>
+                    )}
+
+                    {/* WRONG ANSWER STATE */}
+                    {executionState === "WRONG_ANSWER" && (
+                      <motion.div
+                        key="wrong_answer"
+                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="bg-error/5 border border-border border-l-2 border-l-error rounded-lg p-4 mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <XCircle className="h-5 w-5 text-error" />
+                            <h3 className="font-semibold text-error">Wrong Answer</h3>
+                          </div>
+                        </div>
+
+                        {/* Test Cases Breakdown */}
+                        {executionData?.submission?.testCases && (
+                          <div className="space-y-2 mt-4">
+                            {executionData.submission.testCases.map((tc, idx) => (
+                              <div key={idx} className="border border-border rounded-lg bg-bg-elevated overflow-hidden">
+                                <button
+                                  onClick={() => toggleTestCase(idx)}
+                                  className="w-full flex items-center justify-between p-3 text-sm hover:bg-bg-surface transition-colors"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    {tc.passed ? <CheckCircle2 className="h-4 w-4 text-success" /> : <XCircle className="h-4 w-4 text-error" />}
+                                    <span className="font-medium text-text-primary">Test Case {idx + 1}</span>
+                                  </div>
+                                  {expandedTestCases[idx] ? <ChevronUp className="h-4 w-4 text-text-muted" /> : <ChevronDown className="h-4 w-4 text-text-muted" />}
+                                </button>
+                                <AnimatePresence>
+                                  {expandedTestCases[idx] && (
+                                    <motion.div
+                                      initial={{ height: 0, opacity: 0 }}
+                                      animate={{ height: "auto", opacity: 1 }}
+                                      exit={{ height: 0, opacity: 0 }}
+                                      className="border-t border-border bg-bg-base p-3 font-mono text-xs space-y-3"
+                                    >
+                                      <div>
+                                        <div className="text-text-muted mb-1">Input:</div>
+                                        <div className="text-text-secondary bg-bg-surface p-2 rounded">{tc.input || "Hidden"}</div>
+                                      </div>
+                                      <div>
+                                        <div className="text-text-muted mb-1">Expected Output:</div>
+                                        <div className="text-success bg-success/10 p-2 rounded">{tc.expectedOutput || "Hidden"}</div>
+                                      </div>
+                                      {!tc.passed && (
+                                        <div>
+                                          <div className="text-text-muted mb-1">Actual Output:</div>
+                                          <div className="text-error bg-error/10 p-2 rounded">{tc.actualOutput || tc.output || "Error/Timeout"}</div>
+                                        </div>
+                                      )}
+                                    </motion.div>
+                                  )}
+                                </AnimatePresence>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
+
+                    {/* ERROR STATE */}
+                    {executionState === "ERROR" && (
+                      <motion.div
+                        key="error"
+                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="bg-error/5 border border-border border-l-2 border-l-error rounded-lg p-4 mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <AlertTriangle className="h-5 w-5 text-error" />
+                            <h3 className="font-semibold text-error">Execution Error</h3>
+                          </div>
+                        </div>
+                        <div className="bg-bg-elevated border border-border p-4 rounded-lg font-mono text-xs text-error/90 whitespace-pre-wrap overflow-x-auto">
+                          {executionData?.error || executionData?.submission?.compile_output || executionData?.submission?.message || "An unknown error occurred during execution."}
+                        </div>
+                      </motion.div>
+                    )}
+
+                    {/* TLE STATE */}
+                    {executionState === "TLE" && (
+                      <motion.div
+                        key="tle"
+                        initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="bg-pending/5 border border-border border-l-2 border-l-pending rounded-lg p-4 mb-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="h-5 w-5 text-pending" />
+                            <h3 className="font-semibold text-pending">Time Limit Exceeded</h3>
+                          </div>
+                          <p className="text-sm text-text-muted mt-2">
+                            Your solution took too long — consider optimizing your time complexity.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+
+                  </AnimatePresence>
+                </div>
+              </ScrollArea>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
       </div>
     </div>
   );
-};
-
-export default ProblemIdPage;
+}

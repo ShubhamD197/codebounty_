@@ -28,8 +28,10 @@ const ProblemsPage = async() => {
 
 
   return (
-    <div className='container mx-auto py-32'>
-        <ProblemsTable problems={problems} user={dbUser}/>
+    <div className='w-full min-h-screen bg-bg-base pt-32 pb-16 px-4 sm:px-6 lg:px-8'>
+        <div className="max-w-6xl mx-auto">
+            <ProblemsTable problems={problems} user={dbUser}/>
+        </div>
     </div>
   )
 }

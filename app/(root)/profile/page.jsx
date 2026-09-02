@@ -10,31 +10,31 @@ import React from 'react'
 
 export const dynamic = 'force-dynamic';
 
-const ProfilePage = async() => {
-    const profileData = await getCurrentUserData();
+const ProfilePage = async () => {
+  const profileData = await getCurrentUserData();
 
-    if(!profileData) {
-      return redirect('/');
-    }
+  if (!profileData) {
+    return redirect('/');
+  }
 
- 
+
   return (
     <div className='h-full py-32'>
-        <div className='container mx-auto px-4 max-w-7xl'>
-            <UserInfoCard userData={profileData}/>
-            <ProfileStats
-                submissions={profileData.submissions}
-                solvedCount={profileData.solvedProblems.length}
-                playlistCount={profileData.playlists.length}
-            />
+      <div className='container mx-auto px-4 max-w-7xl'>
+        <UserInfoCard userData={profileData} />
+        <ProfileStats
+          submissions={profileData.submissions}
+          solvedCount={profileData.solvedProblems.length}
+          playlistCount={profileData.playlists.length}
+        />
 
-            <SubmissionHistory submissions={profileData.submissions} />
+        <SubmissionHistory submissions={profileData.submissions} />
 
-            <div className='grid gap-8 mt-10'>
-                  <SolvedProblems solvedProblems={profileData.solvedProblems} />
+        <div className='grid gap-8 mt-10'>
+          <SolvedProblems solvedProblems={profileData.solvedProblems} />
           <PlaylistsSection playlists={profileData.playlists} />
-            </div>
         </div>
+      </div>
     </div>
   )
 }
