@@ -16,14 +16,16 @@ import { Badge } from "@/components/ui/badge";
 export default function ProblemsTable({ problems = [], user }) {
   const [search, setSearch] = useState("");
   const [difficulty, setDifficulty] = useState("ALL");
-  const [selectedTag, setSelectedTag] = useState("ALL");
+  const [patternSlug, setPatternSlug] = useState("ALL");
 
-  // Extract all unique tags
-  const allTags = useMemo(() => {
+  // Patterns present in the current problem set, in catalogue order.
+  const availablePatterns = useMemo(() => {
     if (!Array.isArray(problems)) return [];
-    const tagsSet = new Set();
-    problems.forEach((p) => p.tags?.forEach((t) => tagsSet.add(t)));
-    return Array.from(tagsSet).sort();
+    const bySlug = new Map();
+    problems.forEach((p) => {
+      if (p.primaryPattern) bySlug.set(p.primaryPattern.slug, p.primaryPattern);
+    });
+    return Array.from(bySlug.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [problems]);
 
   const difficulties = ["EASY", "MEDIUM", "HARD"];
@@ -38,9 +40,11 @@ export default function ProblemsTable({ problems = [], user }) {
         difficulty === "ALL" ? true : problem.difficulty === difficulty
       )
       .filter((problem) =>
-        selectedTag === "ALL" ? true : problem.tags?.includes(selectedTag)
+        patternSlug === "ALL"
+          ? true
+          : problem.primaryPattern?.slug === patternSlug
       );
-  }, [problems, search, difficulty, selectedTag]);
+  }, [problems, search, difficulty, patternSlug]);
 
   const getDifficultyColor = (diff) => {
     switch (diff) {
@@ -68,7 +72,7 @@ export default function ProblemsTable({ problems = [], user }) {
           Algorithm Catalog
         </h1>
         <p className="text-lg text-text-muted max-w-2xl">
-          Explore and master essential data structures and patterns. Filter by difficulty, tag, or search directly for a challenge.
+          Practice by pattern, not at random. Filter by the technique a problem teaches, by difficulty, or search directly.
         </p>
 
         {/* Filters & Search */}
@@ -107,16 +111,18 @@ export default function ProblemsTable({ problems = [], user }) {
               ))}
             </div>
             
-            {/* Simple Tag Select (if tags exist) */}
-            {allTags.length > 0 && (
-              <select 
-                value={selectedTag}
-                onChange={(e) => setSelectedTag(e.target.value)}
+            {/* Pattern is the primary browse axis; tags are secondary metadata. */}
+            {availablePatterns.length > 0 && (
+              <select
+                value={patternSlug}
+                onChange={(e) => setPatternSlug(e.target.value)}
                 className="h-12 bg-bg-surface border border-border text-text-secondary text-sm rounded-xl px-4 focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
               >
-                <option value="ALL">All Tags</option>
-                {allTags.map((tag) => (
-                  <option key={tag} value={tag}>{tag}</option>
+                <option value="ALL">All Patterns</option>
+                {availablePatterns.map((pattern) => (
+                  <option key={pattern.slug} value={pattern.slug}>
+                    {pattern.name}
+                  </option>
                 ))}
               </select>
             )}
@@ -131,7 +137,7 @@ export default function ProblemsTable({ problems = [], user }) {
           <div className="text-center">Status</div>
           <div>Title</div>
           <div>Difficulty</div>
-          <div>Tags</div>
+          <div>Pattern</div>
         </div>
 
         {/* Rows */}
@@ -168,10 +174,19 @@ export default function ProblemsTable({ problems = [], user }) {
                         </Badge>
                       </div>
                       
-                      {/* Mobile Tags Row */}
+                      {/* Mobile Pattern + Tags Row */}
                       <div className="md:hidden pl-6">
-                        <div className="flex flex-wrap gap-1.5">
-                          {(problem.tags || []).slice(0, 3).map((tag, idx) => (
+                        <div className="flex flex-wrap gap-1.5 items-center">
+                          {problem.primaryPattern && (
+                            <span className="inline-flex items-center gap-1.5 text-xs text-text-secondary bg-bg-surface px-2 py-0.5 rounded-md border border-border">
+                              <span
+                                className="size-1.5 rounded-full"
+                                style={{ backgroundColor: problem.primaryPattern.color ?? "#71717A" }}
+                              />
+                              {problem.primaryPattern.name}
+                            </span>
+                          )}
+                          {(problem.tags || []).slice(0, 2).map((tag, idx) => (
                             <span key={idx} className="text-xs text-text-muted bg-bg-surface px-2 py-0.5 rounded-md border border-border">
                               {tag}
                             </span>
@@ -195,14 +210,17 @@ export default function ProblemsTable({ problems = [], user }) {
                           {problem.difficulty.charAt(0).toUpperCase() + problem.difficulty.slice(1).toLowerCase()}
                         </Badge>
                       </div>
-                      <div className="hidden md:flex flex-wrap gap-1.5 items-center">
-                        {(problem.tags || []).slice(0, 3).map((tag, idx) => (
-                          <span key={idx} className="text-[11px] font-mono text-text-muted bg-bg-surface px-2 py-0.5 rounded border border-border">
-                            {tag}
+                      <div className="hidden md:flex items-center">
+                        {problem.primaryPattern ? (
+                          <span className="inline-flex items-center gap-1.5 text-[11px] text-text-secondary bg-bg-surface px-2 py-0.5 rounded border border-border truncate">
+                            <span
+                              className="size-1.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: problem.primaryPattern.color ?? "#71717A" }}
+                            />
+                            {problem.primaryPattern.name}
                           </span>
-                        ))}
-                        {(problem.tags?.length || 0) > 3 && (
-                          <span className="text-[11px] text-text-muted">+{problem.tags.length - 3}</span>
+                        ) : (
+                          <span className="text-[11px] text-text-muted">—</span>
                         )}
                       </div>
                     </motion.div>
@@ -223,7 +241,7 @@ export default function ProblemsTable({ problems = [], user }) {
                   We couldn't find any problems matching your current filters. Try adjusting your search criteria.
                 </p>
                 <button 
-                  onClick={() => { setSearch(""); setDifficulty("ALL"); setSelectedTag("ALL"); }}
+                  onClick={() => { setSearch(""); setDifficulty("ALL"); setPatternSlug("ALL"); }}
                   className="mt-6 text-sm text-accent hover:text-accent-hover font-medium"
                 >
                   Clear all filters

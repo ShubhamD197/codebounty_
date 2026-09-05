@@ -19,6 +19,7 @@ export const getAllProblems = async () => {
         difficulty: true,
         tags: true,
         createdAt: true,
+        primaryPattern: { select: { id: true, name: true, slug: true, color: true } },
         solvedBy: dbUser
           ? { where: { userId: dbUser.id }, select: { id: true } }
           : false,
@@ -54,6 +55,7 @@ export const getProblemById = async (id) => {
         hints: true,
         editorial: true,
         codeSnippets: true,
+        primaryPattern: { select: { name: true, slug: true, color: true } },
       },
     });
 

@@ -64,6 +64,15 @@ export function CommandMenu() {
                   <Command.Group heading="Navigation" className="text-xs text-text-muted px-2 py-1.5">
                     <Command.Item
                       onSelect={() => {
+                        router.push("/patterns");
+                        setOpen(false);
+                      }}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-text-primary rounded-md cursor-pointer data-[selected=true]:bg-accent/20 data-[selected=true]:text-accent-hover transition-colors"
+                    >
+                      Browse Patterns
+                    </Command.Item>
+                    <Command.Item
+                      onSelect={() => {
                         router.push("/problems");
                         setOpen(false);
                       }}

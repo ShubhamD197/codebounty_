@@ -74,6 +74,22 @@ whole app off Next.js.
 >
 > `docker-compose.yml` is dev-only leftover and is not part of any environment.
 
+**If a migration hangs on `Timed out trying to acquire a postgres advisory lock`:**
+a previous migrate run went through the pooler, took Prisma's migration lock,
+and failed — pgBouncer then kept that backend alive, so the lock was never
+released and every later run queues behind a dead process. Find and clear it:
+
+```sql
+SELECT l.pid, a.state FROM pg_locks l
+  JOIN pg_stat_activity a ON a.pid = l.pid
+ WHERE l.locktype = 'advisory';
+-- if the holder is idle and holds only objid 72707369:
+SELECT pg_terminate_backend(<pid>);
+```
+
+Then re-run the migration against `DIRECT_URL`. Never point a migrate command at
+the pooled host.
+
 ---
 
 ## 3. Judge0 in Production

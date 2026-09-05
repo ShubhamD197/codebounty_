@@ -39,6 +39,7 @@ const problemSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),
   description: z.string().min(10, "Description must be at least 10 characters"),
   difficulty: z.enum(["EASY", "MEDIUM", "HARD"]),
+  primaryPatternId: z.string().min(1, "Pick the pattern this problem teaches"),
   tags: z.array(z.string()).min(1, "At least one tag is required"),
   constraints: z.string().min(1, "Constraints are required"),
   hints: z.string().optional(),
@@ -83,6 +84,9 @@ const problemSchema = z.object({
 
 // SAMPLE DATA
 const sampledpData = {
+  // Resolved to a Pattern id at load time - ids are database uuids, so the
+  // samples reference the stable slug instead.
+  patternSlug: "dynamic-programming",
   title: "Climbing Stairs",
   description:
     "You are climbing a staircase. It takes n steps to reach the top. Each time you can either climb 1 or 2 steps. In how many distinct ways can you climb to the top?",
@@ -244,6 +248,7 @@ class Main {
 };
 
 const sampleStringProblem = {
+  patternSlug: "two-pointers",
   title: "Valid Palindrome",
   description:
     "A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Alphanumeric characters include letters and numbers. Given a string s, return true if it is a palindrome, or false otherwise.",
@@ -468,7 +473,7 @@ const CodeEditor = ({ value, onChange, language = "javascript", title }) => {
 };
 
 // MAIN FORM
-const CreateProblemForm = () => {
+const CreateProblemForm = ({ patterns = [] }) => {
   const router = useRouter();
   const [sampleType, setSampleType] = useState("DP");
   const [isLoading, setIsLoading] = useState(false);
@@ -481,6 +486,7 @@ const CreateProblemForm = () => {
       title: "",
       description: "",
       difficulty: "EASY",
+      primaryPatternId: "",
       constraints: "",
       hints: "",
       editorial: "",
@@ -543,10 +549,15 @@ const CreateProblemForm = () => {
   };
 
   const loadSampleData = () => {
-    const sampleData = sampleType === "DP" ? sampledpData : sampleStringProblem;
+    const { patternSlug, ...sampleData } =
+      sampleType === "DP" ? sampledpData : sampleStringProblem;
     replaceTags(sampleData.tags.map((tag) => tag));
     replaceTestCases(sampleData.testCases.map((tc) => ({ ...tc, isHidden: !!tc.isHidden })));
-    reset(sampleData);
+    reset({
+      ...sampleData,
+      primaryPatternId:
+        patterns.find((pattern) => pattern.slug === patternSlug)?.id ?? "",
+    });
   };
 
   // Helper to check if a specific tab's fields have validation errors
@@ -611,7 +622,7 @@ const CreateProblemForm = () => {
                 className="data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none border-b-2 border-transparent rounded-none px-6 py-3 font-medium"
               >
                 <FileText className="w-4 h-4 mr-2" /> Basic Info
-                {hasErrors(["title", "description", "difficulty", "tags", "constraints"]) && (
+                {hasErrors(["title", "description", "difficulty", "primaryPatternId", "tags", "constraints"]) && (
                   <AlertCircle className="w-3.5 h-3.5 ml-2 text-destructive" />
                 )}
               </TabsTrigger>
@@ -709,6 +720,41 @@ const CreateProblemForm = () => {
                             </Select>
                           )}
                         />
+                      </div>
+
+                      <div>
+                        <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                          Pattern
+                        </Label>
+                        <Controller
+                          name="primaryPatternId"
+                          control={control}
+                          render={({ field }) => (
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger className="mt-2 bg-muted/20">
+                                <SelectValue placeholder="Select pattern" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {patterns.map((pattern) => (
+                                  <SelectItem key={pattern.id} value={pattern.id}>
+                                    <span className="flex items-center gap-2">
+                                      <span
+                                        className="size-2 rounded-full"
+                                        style={{ backgroundColor: pattern.color ?? "#71717A" }}
+                                      />
+                                      {pattern.name}
+                                    </span>
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                        {errors.primaryPatternId && (
+                          <p className="mt-2 text-xs text-destructive">
+                            {errors.primaryPatternId.message}
+                          </p>
+                        )}
                       </div>
 
                       <div>

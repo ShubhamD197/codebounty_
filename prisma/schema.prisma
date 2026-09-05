@@ -4,7 +4,12 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // Pooled endpoint for the running app: each serverless function opens its own
+  // connection, so it must go through Neon's pooler.
+  url       = env("DATABASE_URL")
+  // Migrations cannot run through pgBouncer - Prisma reports a misleading
+  // "P1001: Can't reach database server" - so they use the unpooled endpoint.
+  directUrl = env("DIRECT_URL")
 }
 
 model User {
@@ -25,12 +30,31 @@ model User {
   @@index([role])
 }
 
+model Pattern {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String
+  // Learning order shown on /patterns. Not unique: ties are fine, we fall back
+  // to name for a stable sort.
+  order       Int       @default(0)
+  color       String?
+  icon        String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  problems    Problem[]
+
+  @@index([order])
+}
+
 model Problem {
   id                 String              @id @default(uuid())
   title              String
   description        String
   difficulty         Difficulty
+  // Secondary metadata only. The primary browse axis is primaryPattern.
   tags               String[]
+  primaryPatternId   String?
   userId             String
   examples           Json
   constraints        String
@@ -42,11 +66,14 @@ model Problem {
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   user               User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // SetNull, not Cascade: deleting a pattern must never delete problems.
+  primaryPattern     Pattern?            @relation(fields: [primaryPatternId], references: [id], onDelete: SetNull)
   problemsPlaylists  ProblemInPlaylist[]
   solvedBy           ProblemSolved[]
   submissions        Submission[]
 
   @@index([difficulty])
+  @@index([primaryPatternId])
 }
 
 model Submission {

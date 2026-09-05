@@ -35,6 +35,12 @@ const Navbar = ({ userRole }) => {
 
           <div className="hidden md:flex flex-row items-center justify-center gap-x-6">
             <Link
+              href="/patterns"
+              className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200"
+            >
+              Patterns
+            </Link>
+            <Link
               href="/problems"
               className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors duration-200"
             >
