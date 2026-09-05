@@ -68,6 +68,8 @@ model Submission {
   testCases     TestCaseResult[]
 
   @@index([status])
+  @@index([userId, problemId])
+  @@index([problemId])
 }
 
 model TestCaseResult {
@@ -97,6 +99,7 @@ model ProblemSolved {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, problemId])
+  @@index([problemId])
 }
 
 model Playlist {
