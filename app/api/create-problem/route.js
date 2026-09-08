@@ -21,6 +21,7 @@ export async function POST(request) {
       description,
       difficulty,
       tags,
+      primaryPatternId,
       examples,
       constraints,
       testCases,
@@ -32,6 +33,27 @@ export async function POST(request) {
     if (!title || !description || !difficulty || !testCases || !codeSnippets || !referenceSolutions) {
       return NextResponse.json(
         { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    // A problem must belong to a real pattern - the pattern is the primary
+    // browse axis, so an unset or stale id would make it unreachable.
+    if (!primaryPatternId) {
+      return NextResponse.json(
+        { error: "A primary pattern is required" },
+        { status: 400 }
+      );
+    }
+
+    const pattern = await db.pattern.findUnique({
+      where: { id: primaryPatternId },
+      select: { id: true },
+    });
+
+    if (!pattern) {
+      return NextResponse.json(
+        { error: "Unknown pattern" },
         { status: 400 }
       );
     }
@@ -121,6 +143,7 @@ export async function POST(request) {
         description,
         difficulty,
         tags,
+        primaryPatternId,
         examples,
         constraints,
         testCases,

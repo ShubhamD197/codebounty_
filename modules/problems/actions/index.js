@@ -1,32 +1,28 @@
 "use server";
 
 import { db } from "@/lib/db";
+import { getDbUser } from "@/lib/auth";
 import { getLanguageName, pollBatchResults, submitBatch } from "@/lib/judge0/judge0";
-import { currentUser } from "@clerk/nextjs/server";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
-import { includes } from "zod";
 
 export const getAllProblems = async () => {
   try {
-    const user = await currentUser();
-    const data = await db.user.findUnique({
-      where: {
-        clerkId: user?.id,
-      },
-      select: {
-        id: true,
-      },
-    });
+    const dbUser = await getDbUser();
 
     const problems = await db.problem.findMany({
-      include: {
-
-        solvedBy: {
-          where: {
-            userId: data.id
-          }
-        }
+      // Only list-view fields. Never select testCases/referenceSolutions here:
+      // this payload is serialized to the browser.
+      select: {
+        id: true,
+        title: true,
+        difficulty: true,
+        tags: true,
+        createdAt: true,
+        primaryPattern: { select: { id: true, name: true, slug: true, color: true } },
+        solvedBy: dbUser
+          ? { where: { userId: dbUser.id }, select: { id: true } }
+          : false,
       },
       orderBy: {
         createdAt: "desc",
@@ -45,6 +41,22 @@ export const getProblemById = async (id) => {
       where: {
         id: id,
       },
+      // Public fields only. referenceSolutions and testCases stay server-side —
+      // /problem/[id] is a client component, so anything selected here is
+      // readable in the browser and would leak the answers and hidden tests.
+      select: {
+        id: true,
+        title: true,
+        description: true,
+        difficulty: true,
+        tags: true,
+        examples: true,
+        constraints: true,
+        hints: true,
+        editorial: true,
+        codeSnippets: true,
+        primaryPattern: { select: { name: true, slug: true, color: true } },
+      },
     });
 
     return { success: true, data: problem };
@@ -56,18 +68,13 @@ export const getProblemById = async (id) => {
 
 export const deleteProblem = async (problemId) => {
   try {
-    const user = await currentUser();
+    const dbUser = await getDbUser();
 
-    if (!user) {
+    if (!dbUser) {
       throw new Error("Unauthorized");
     }
-    // Verify if user is admin
-    const dbUser = await db.user.findUnique({
-      where: { clerkId: user.id },
-      select: { role: true },
-    });
 
-    if (dbUser?.role !== UserRole.ADMIN) {
+    if (dbUser.role !== UserRole.ADMIN) {
       throw new Error("Only admins can delete problems");
     }
 
@@ -146,9 +153,9 @@ export const runCode = async (
   problemId
 ) => {
   try {
-    const user = await currentUser();
+    const dbUser = await getDbUser();
 
-    if (!user) {
+    if (!dbUser) {
       return {
         success: false,
         error: "Unauthorized",
@@ -178,9 +185,10 @@ export const runCode = async (
      *
      * isHidden === false
      */
-    const visibleTestCases = problem.testCases.filter(
-      (testCase) => testCase.isHidden === false
-    );
+    // testCases is a Json column, so it is only an array by convention.
+    const visibleTestCases = Array.isArray(problem.testCases)
+      ? problem.testCases.filter((testCase) => testCase.isHidden === false)
+      : [];
 
     if (visibleTestCases.length === 0) {
       return {
@@ -222,25 +230,12 @@ export const submitCode = async (
   problemId
 ) => {
   try {
-    const user = await currentUser();
-
-    if (!user) {
-      return {
-        success: false,
-        error: "Unauthorized",
-      };
-    }
-
-    const dbUser = await db.user.findUnique({
-      where: {
-        clerkId: user.id,
-      },
-    });
+    const dbUser = await getDbUser();
 
     if (!dbUser) {
       return {
         success: false,
-        error: "User not found",
+        error: "Unauthorized",
       };
     }
 
@@ -396,25 +391,12 @@ export const getAllSubmissionByCurrentUserForProblem = async (
   problemId
 ) => {
   try {
-    const user = await currentUser();
-
-    if (!user) {
-      return {
-        success: false,
-        error: "Unauthorized",
-      };
-    }
-
-    const dbUser = await db.user.findUnique({
-      where: {
-        clerkId: user.id,
-      },
-    });
+    const dbUser = await getDbUser();
 
     if (!dbUser) {
       return {
         success: false,
-        error: "User not found",
+        error: "Unauthorized",
       };
     }
 

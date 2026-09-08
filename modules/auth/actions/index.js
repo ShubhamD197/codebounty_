@@ -57,7 +57,8 @@ export const currentUserRole = async ()=>{
             role:true
           }
         })
-    return userRole.role;
+    // Null on the first request after sign-up, before onBoardUser has run.
+    return userRole?.role ?? null;
   } catch (error) {
      console.error("❌ Error fetching user role:", error);
         return { success: false, error: "Failed to fetch user role" };
@@ -66,6 +67,8 @@ export const currentUserRole = async ()=>{
 
 export const getCurrentUser = async()=>{
   const user = await currentUser()
+
+  if (!user) return null;
 
   const dbUser = await db.user.findUnique({
     where:{
