@@ -4,6 +4,8 @@ import ProblemsTable from '@/modules/problems/components/problem-table';
 import { currentUser } from '@clerk/nextjs/server'
 import React from 'react'
 
+export const dynamic = 'force-dynamic';
+
 const ProblemsPage = async() => {
     const user = await currentUser()
 

@@ -228,6 +228,18 @@ export default function ProblemIdPage({ params }) {
             <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 text-xs font-mono font-medium border ${getDifficultyColor(problem.difficulty)}`}>
               {problem.difficulty}
             </Badge>
+            {problem.primaryPattern && (
+              <Link
+                href={`/patterns/${problem.primaryPattern.slug}`}
+                className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary bg-bg-elevated border border-border rounded-full px-2.5 py-0.5 transition-colors"
+              >
+                <span
+                  className="size-1.5 rounded-full"
+                  style={{ backgroundColor: problem.primaryPattern.color ?? "#71717A" }}
+                />
+                {problem.primaryPattern.name}
+              </Link>
+            )}
             <AnimatePresence>
               {problemStatus === "solved" && (
                 <motion.div

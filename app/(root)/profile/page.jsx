@@ -4,6 +4,8 @@ import PlaylistsSection from '@/modules/profile/components/playlist-section';
 import ProfileStats from '@/modules/profile/components/profile-stats';
 import SolvedProblems from '@/modules/profile/components/solved-problems';
 import UserInfoCard from '@/modules/profile/components/user-info';
+import PatternProgress from '@/modules/profile/components/pattern-progress';
+import { getAllPatterns } from '@/modules/patterns/actions';
 import { redirect } from 'next/navigation';
 import React from 'react'
 
@@ -17,6 +19,8 @@ const ProfilePage = async () => {
     return redirect('/');
   }
 
+  const { data: patterns } = await getAllPatterns();
+
 
   return (
     <div className='h-full py-32'>
@@ -27,6 +31,8 @@ const ProfilePage = async () => {
           solvedCount={profileData.solvedProblems.length}
           playlistCount={profileData.playlists.length}
         />
+
+        <PatternProgress patterns={patterns ?? []} />
 
         <SubmissionHistory submissions={profileData.submissions} />
 
