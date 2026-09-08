@@ -74,6 +74,17 @@ whole app off Next.js.
 >
 > `docker-compose.yml` is dev-only leftover and is not part of any environment.
 
+**If the app throws `P1001: Can't reach database server` at runtime:** it is
+almost certainly a Neon cold start, not an unreachable host. Neon autosuspends
+an idle compute; the next request has to wake it, and waking plus the pooler
+handshake regularly takes 2-6s. Prisma's `connect_timeout` defaults to **5
+seconds** and reports a timeout with the same `P1001` text it uses for a host
+that genuinely is not there — so the message points at the wrong thing.
+
+Both connection strings therefore carry `connect_timeout=15`. Symptom if it
+regresses: the first page load after the app sits idle fails, and a refresh
+succeeds.
+
 **If a migration hangs on `Timed out trying to acquire a postgres advisory lock`:**
 a previous migrate run went through the pooler, took Prisma's migration lock,
 and failed — pgBouncer then kept that backend alive, so the lock was never

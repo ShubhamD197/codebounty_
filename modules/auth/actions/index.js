@@ -39,13 +39,20 @@ export const onBoardUser = async() =>{
     }
 }
 
+/**
+ * The current user's role, or null when signed out, not yet onboarded, or the
+ * lookup failed.
+ *
+ * Always returns a role or null - never an error object. Callers compare this
+ * against UserRole.ADMIN, so returning a truthy object on failure would be
+ * indistinguishable from "not an admin" at the call site while looking like a
+ * successful result.
+ */
 export const currentUserRole = async ()=>{
   try {
     const user = await currentUser();
 
-      if (!user) {
-            return { success: false, error: "No authenticated user found" };
-        }
+    if (!user) return null;
 
         const {id} = user;
 
@@ -61,7 +68,7 @@ export const currentUserRole = async ()=>{
     return userRole?.role ?? null;
   } catch (error) {
      console.error("❌ Error fetching user role:", error);
-        return { success: false, error: "Failed to fetch user role" };
+     return null;
   }
 }
 
