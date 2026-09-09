@@ -2,7 +2,12 @@
 
 import { db } from "@/lib/db";
 import { getDbUser } from "@/lib/auth";
-import { getLanguageName, pollBatchResults, submitBatch } from "@/lib/judge0/judge0";
+import {
+  getLanguageName,
+  isSupportedLanguageId,
+  pollBatchResults,
+  submitBatch,
+} from "@/lib/judge0/judge0";
 import { UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
@@ -93,6 +98,13 @@ export const deleteProblem = async (problemId) => {
   }
 };
 
+const normalizeOutput = (value) =>
+  (value ?? "")
+    .split(/\r?\n/)
+    .map((line) => line.trimEnd())
+    .join("\n")
+    .trimEnd();
+
 const executeTestCases = async ({
   sourceCode,
   languageId,
@@ -100,6 +112,12 @@ const executeTestCases = async ({
 }) => {
   if (!Array.isArray(testCases) || testCases.length === 0) {
     throw new Error("No test cases available");
+  }
+
+  // languageId arrives from the browser. Judge0 would otherwise reject the
+  // whole batch mid-flight with a much less useful error.
+  if (!isSupportedLanguageId(languageId)) {
+    throw new Error(`Unsupported language id: ${languageId}`);
   }
 
   const submissions = testCases.map((testCase) => ({
@@ -122,7 +140,9 @@ const executeTestCases = async ({
     const stdout = result.stdout?.trim() || null;
     const expected = testCases[index].output?.trim();
 
-    const passed = stdout === expected;
+    // Compare per line with trailing whitespace stripped: a stray space or a
+    // CRLF in seeded test data should not fail a correct solution.
+    const passed = normalizeOutput(stdout) === normalizeOutput(expected);
 
     if (!passed) {
       allPassed = false;
@@ -270,91 +290,75 @@ export const submitCode = async (
 
     const status = allPassed ? "Accepted" : "Wrong Answer";
 
-    /* ------------------------- Create Submission ------------------------ */
+    /* --------------------- Persist (one round trip) --------------------- */
 
-    const submission = await db.submission.create({
-      data: {
-        userId: dbUser.id,
-        problemId,
-        sourceCode,
-        language: getLanguageName(languageId),
-
-        stdin: JSON.stringify(
-          allTestCases.map((testCase) => testCase.input)
-        ),
-
-        stdout: JSON.stringify(
-          detailedResults.map((result) => result.stdout)
-        ),
-
-        stderr: detailedResults.some((result) => result.stderr)
-          ? JSON.stringify(
-              detailedResults.map((result) => result.stderr)
-            )
-          : null,
-
-        compileOutput: detailedResults.some(
-          (result) => result.compile_output
-        )
-          ? JSON.stringify(
-              detailedResults.map(
-                (result) => result.compile_output
-              )
-            )
-          : null,
-
-        status,
-
-        memory: detailedResults.some((result) => result.memory)
-          ? JSON.stringify(
-              detailedResults.map((result) => result.memory)
-            )
-          : null,
-
-        time: detailedResults.some((result) => result.time)
-          ? JSON.stringify(
-              detailedResults.map((result) => result.time)
-            )
-          : null,
-      },
-    });
-
-    /* -------------------------- Problem Solved -------------------------- */
-
-    if (allPassed) {
-      await db.problemSolved.upsert({
-        where: {
-          userId_problemId: {
-            userId: dbUser.id,
-            problemId,
-          },
-        },
-        update: {},
-        create: {
+    // Test case rows are nested into the submission insert, and the solved
+    // upsert runs alongside it: three sequential Neon round trips became one.
+    const [submission] = await Promise.all([
+      db.submission.create({
+        data: {
           userId: dbUser.id,
           problemId,
+          sourceCode,
+          language: getLanguageName(languageId),
+
+          stdin: JSON.stringify(
+            allTestCases.map((testCase) => testCase.input)
+          ),
+
+          stdout: JSON.stringify(
+            detailedResults.map((result) => result.stdout)
+          ),
+
+          stderr: detailedResults.some((result) => result.stderr)
+            ? JSON.stringify(detailedResults.map((result) => result.stderr))
+            : null,
+
+          compileOutput: detailedResults.some(
+            (result) => result.compile_output
+          )
+            ? JSON.stringify(
+                detailedResults.map((result) => result.compile_output)
+              )
+            : null,
+
+          status,
+
+          memory: detailedResults.some((result) => result.memory)
+            ? JSON.stringify(detailedResults.map((result) => result.memory))
+            : null,
+
+          time: detailedResults.some((result) => result.time)
+            ? JSON.stringify(detailedResults.map((result) => result.time))
+            : null,
+
+          testCases: {
+            create: detailedResults.map((result) => ({
+              testCase: result.testCase,
+              passed: result.passed,
+              stdout: result.stdout,
+              expected: result.expected,
+              stderr: result.stderr,
+              compileOutput: result.compile_output,
+              status: result.status,
+              memory: result.memory,
+              time: result.time,
+            })),
+          },
         },
-      });
-    }
+        select: { id: true },
+      }),
 
-    /* ------------------------- Test Case Results ------------------------ */
-
-    const testCaseResults = detailedResults.map((result) => ({
-      submissionId: submission.id,
-      testCase: result.testCase,
-      passed: result.passed,
-      stdout: result.stdout,
-      expected: result.expected,
-      stderr: result.stderr,
-      compileOutput: result.compile_output,
-      status: result.status,
-      memory: result.memory,
-      time: result.time,
-    }));
-
-    await db.testCaseResult.createMany({
-      data: testCaseResults,
-    });
+      allPassed
+        ? db.problemSolved.upsert({
+            where: {
+              userId_problemId: { userId: dbUser.id, problemId },
+            },
+            update: {},
+            create: { userId: dbUser.id, problemId },
+          })
+        : null,
+    ]);
 
     /* ---------------------------- Final Result -------------------------- */
 
@@ -405,6 +409,7 @@ export const getAllSubmissionByCurrentUserForProblem = async (
         problemId,
         userId: dbUser.id,
       },
+      orderBy: { createdAt: "desc" },
     });
 
     return {
