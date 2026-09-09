@@ -60,22 +60,29 @@
 
 :root {
   --radius: 0.625rem;
-  --bg-base: #0A0A0B;
-  --bg-surface: #131316;
-  --bg-elevated: #1C1C21;
-  --border: #2A2A30;
-  --text-primary: #F5F5F7;
-  --text-secondary: #A1A1AA;
+
+  /* Light theme. next-themes puts .dark on <html> for the dark theme, so this
+     block is the light one - it used to hold the dark values, which is why
+     switching themes did nothing. */
+  --bg-base: #FFFFFF;
+  --bg-surface: #F7F7F8;
+  --bg-elevated: #EFEFF1;
+  --border: #E1E1E6;
+  --text-primary: #18181B;
+  --text-secondary: #52525B;
   --text-muted: #71717A;
-  --accent: #8B5CF6;
-  --accent-hover: #A78BFA;
-  --accent-active: #7C3AED;
-  --accent-gradient-end: #6D28D9;
-  --success: #22C55E;
-  --error: #EF4444;
-  --pending: #F59E0B;
-  
-  /* Fallbacks for shadcn */
+  /* Darker than the dark-theme accent: violet-500 on white fails contrast for
+     text, violet-600 passes. */
+  --accent: #7C3AED;
+  --accent-hover: #6D28D9;
+  --accent-active: #5B21B6;
+  --accent-gradient-end: #4C1D95;
+  --success: #16A34A;
+  --error: #DC2626;
+  --pending: #D97706;
+
+  /* shadcn aliases. These only ever point at the tokens above, so a theme is
+     defined in exactly one place. */
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-surface);
@@ -116,8 +123,9 @@
   --success: #22C55E;
   --error: #EF4444;
   --pending: #F59E0B;
-  
-  /* Fallbacks for shadcn */
+
+  /* shadcn aliases. These only ever point at the tokens above, so a theme is
+     defined in exactly one place. */
   --background: var(--bg-base);
   --foreground: var(--text-primary);
   --card: var(--bg-surface);

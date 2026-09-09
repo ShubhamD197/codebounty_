@@ -1,19 +1,7 @@
-import { dark } from "@clerk/themes";
-
+// baseTheme and the palette now come from ClerkThemeProvider, which follows the
+// active light/dark theme. Only the element classNames live here, and they use
+// our CSS variables, so they work in both themes unchanged.
 export const authAppearance = {
-  baseTheme: dark,
-  variables: {
-    colorPrimary: "#8B5CF6", // accent
-    colorBackground: "#131316", // bg-surface
-    colorInputBackground: "#131316", // bg-surface
-    colorInputText: "#F5F5F7", // text-primary
-    colorText: "#F5F5F7",
-    colorTextSecondary: "#A1A1AA", // text-secondary
-    colorDanger: "#EF4444", // error-red
-    colorSuccess: "#22C55E", // success
-    fontFamily: "var(--font-inter), sans-serif",
-    borderRadius: "0.5rem",
-  },
   elements: {
     card: "bg-bg-base shadow-none sm:bg-bg-base border-0 p-0 sm:p-0",
     headerTitle: "text-2xl font-bold text-text-primary",
