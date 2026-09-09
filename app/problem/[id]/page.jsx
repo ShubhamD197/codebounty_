@@ -49,6 +49,8 @@ import {
 } from "@/modules/problems/actions";
 import { getJudge0LanguageId } from "@/lib/judge0/judge0";
 import { SubmissionHistory } from "@/modules/problems/components/submission-history";
+import AddToPlaylistButton from "@/modules/playlists/components/add-to-playlist-button";
+import { Show } from "@clerk/nextjs";
 
 const getDifficultyColor = (difficulty) => {
   switch (difficulty) {
@@ -64,6 +66,7 @@ const getDifficultyColor = (difficulty) => {
 };
 
 export default function ProblemIdPage({ params }) {
+  const { resolvedTheme } = useTheme();
   const [problem, setProblem] = useState(null);
   const [selectedLanguage, setSelectedLanguage] = useState("JAVASCRIPT");
   const [code, setCode] = useState("");
@@ -224,7 +227,12 @@ export default function ProblemIdPage({ params }) {
             </Button>
           </Link>
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold tracking-tight">{problem.title}</h1>
+            <h1 className="text-lg font-semibold tracking-tight">
+              {problem.number != null && (
+                <span className="text-text-muted font-mono mr-1.5">{problem.number}.</span>
+              )}
+              {problem.title}
+            </h1>
             <Badge variant="outline" className={`rounded-full px-2.5 py-0.5 text-xs font-mono font-medium border ${getDifficultyColor(problem.difficulty)}`}>
               {problem.difficulty}
             </Badge>
@@ -243,6 +251,9 @@ export default function ProblemIdPage({ params }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <Show when="signed-in">
+            <AddToPlaylistButton problemId={problem.id} />
+          </Show>
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
               onClick={handleRun}
@@ -401,7 +412,7 @@ export default function ProblemIdPage({ params }) {
                   language={selectedLanguage.toLowerCase()}
                   value={code}
                   onChange={(v) => setCode(v || "")}
-                  theme="vs-dark"
+                  theme={resolvedTheme === "light" ? "light" : "vs-dark"}
                   options={{
                     minimap: { enabled: false },
                     fontSize: 14,

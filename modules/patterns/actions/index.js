@@ -75,6 +75,7 @@ export const getPatternBySlug = async (slug) => {
           // List-view fields only - never testCases or referenceSolutions.
           select: {
             id: true,
+            number: true,
             title: true,
             difficulty: true,
             tags: true,
@@ -82,7 +83,7 @@ export const getPatternBySlug = async (slug) => {
               ? { where: { userId: dbUser.id }, select: { id: true } }
               : false,
           },
-          orderBy: [{ difficulty: "asc" }, { createdAt: "asc" }],
+          orderBy: [{ difficulty: "asc" }, { number: "asc" }],
         },
       },
     });

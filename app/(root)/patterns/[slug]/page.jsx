@@ -1,30 +1,23 @@
 import React from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CheckCircle2 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { ArrowLeft } from "lucide-react";
 import { getPatternBySlug } from "@/modules/patterns/actions";
+import { getSavedProblemIds } from "@/modules/playlists/actions";
+import ProblemRow from "@/modules/problems/components/problem-row";
 
 export const dynamic = "force-dynamic";
 
-const getDifficultyColor = (difficulty) => {
-  switch (difficulty) {
-    case "EASY":
-      return "bg-success/10 text-success border-success/20";
-    case "MEDIUM":
-      return "bg-pending/10 text-pending border-pending/20";
-    case "HARD":
-      return "bg-error/10 text-error border-error/20";
-    default:
-      return "bg-bg-elevated text-text-secondary border-border";
-  }
-};
-
 const PatternDetailPage = async ({ params }) => {
   const { slug } = await params;
-  const { data: pattern, success } = await getPatternBySlug(slug);
+  const [{ data: pattern, success }, savedIds] = await Promise.all([
+    getPatternBySlug(slug),
+    getSavedProblemIds(),
+  ]);
 
   if (!success || !pattern) notFound();
+
+  const saved = new Set(savedIds);
 
   const solvedCount = pattern.problems.filter(
     (problem) => problem.solvedBy?.length > 0
@@ -68,27 +61,13 @@ const PatternDetailPage = async ({ params }) => {
         ) : (
           <div className="flex flex-col border-t border-border">
             {pattern.problems.map((problem) => (
-              <Link href={`/problem/${problem.id}`} key={problem.id}>
-                <div className="group grid grid-cols-[32px_1fr_auto] gap-4 items-center px-4 py-3 border-b border-border hover:bg-bg-elevated transition-colors">
-                  <div className="flex justify-center">
-                    {problem.solvedBy?.length > 0 ? (
-                      <CheckCircle2 className="size-5 text-success" />
-                    ) : (
-                      <div className="size-5 rounded-full border border-border/50 group-hover:border-accent/50 transition-colors" />
-                    )}
-                  </div>
-                  <span className="font-medium text-sm text-text-primary group-hover:text-accent transition-colors truncate">
-                    {problem.title}
-                  </span>
-                  <Badge
-                    variant="outline"
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-mono border ${getDifficultyColor(problem.difficulty)}`}
-                  >
-                    {problem.difficulty.charAt(0) +
-                      problem.difficulty.slice(1).toLowerCase()}
-                  </Badge>
-                </div>
-              </Link>
+              <ProblemRow
+                key={problem.id}
+                problem={problem}
+                solved={problem.solvedBy?.length > 0}
+                showSave
+                saved={saved.has(problem.id)}
+              />
             ))}
           </div>
         )}
