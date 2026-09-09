@@ -1,8 +1,8 @@
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
-import { ClerkProvider } from "@clerk/nextjs";
+import { ClerkThemeProvider } from "@/components/providers/clerk-theme-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
-import { Toaster } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,18 +23,20 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetBrainsMono.variable} antialiased font-sans bg-base text-primary`}
-      ><ClerkProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="dark"
-            enableSystem={false}
-            disableTransitionOnChange
-          >
-            <Toaster />
+        className={`${inter.variable} ${jetBrainsMono.variable} antialiased font-sans`}
+      >
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <ClerkThemeProvider>
+            <Toaster richColors closeButton />
             {children}
-          </ThemeProvider>
-        </ClerkProvider></body>
+          </ClerkThemeProvider>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }
