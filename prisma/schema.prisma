@@ -49,6 +49,9 @@ model Pattern {
 
 model Problem {
   id                 String              @id @default(uuid())
+  // Human-facing identifier ("1. Two Sum"). Sequence-backed, so it is stable
+  // and never reused; the uuid stays the routing/relation key.
+  number             Int                 @unique @default(autoincrement())
   title              String
   description        String
   difficulty         Difficulty

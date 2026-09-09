@@ -20,6 +20,7 @@ export const getAllProblems = async () => {
       // this payload is serialized to the browser.
       select: {
         id: true,
+        number: true,
         title: true,
         difficulty: true,
         tags: true,
@@ -29,8 +30,9 @@ export const getAllProblems = async () => {
           ? { where: { userId: dbUser.id }, select: { id: true } }
           : false,
       },
+      // Catalogue order is the problem number, the way users refer to them.
       orderBy: {
-        createdAt: "desc",
+        number: "asc",
       },
     });
     return { success: true, data: problems };
@@ -51,6 +53,7 @@ export const getProblemById = async (id) => {
       // readable in the browser and would leak the answers and hidden tests.
       select: {
         id: true,
+        number: true,
         title: true,
         description: true,
         difficulty: true,

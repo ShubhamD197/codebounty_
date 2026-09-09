@@ -4,6 +4,10 @@ import ProblemsTable from '@/modules/problems/components/problem-table';
 import { currentUser } from '@clerk/nextjs/server'
 import React from 'react'
 
+// Reads the Clerk session, so it can never be prerendered. Saying so keeps
+// the build log free of DYNAMIC_SERVER_USAGE errors.
+export const dynamic = "force-dynamic";
+
 const ProblemsPage = async() => {
     const user = await currentUser()
 
@@ -16,7 +20,7 @@ const ProblemsPage = async() => {
     });
     }
 
-    const {data:problems , error} = await getAllProblems()
+    const { data: problems, error } = await getAllProblems();
 
       if (error) {
     return (
@@ -30,7 +34,7 @@ const ProblemsPage = async() => {
   return (
     <div className='w-full min-h-screen bg-bg-base pt-32 pb-16 px-4 sm:px-6 lg:px-8'>
         <div className="max-w-6xl mx-auto">
-            <ProblemsTable problems={problems} user={dbUser}/>
+            <ProblemsTable problems={problems} user={dbUser} />
         </div>
     </div>
   )
