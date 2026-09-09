@@ -79,7 +79,7 @@ const ActivityHeatmap = ({ submissions }) => {
                     <div className="flex gap-1">
                         {squares.map((sq, i) => (
                             <Tooltip key={i}>
-                                <TooltipTrigger asChild>
+                                <TooltipTrigger>
                                     <motion.div
                                         initial={{ opacity: 0, scale: 0.5 }}
                                         animate={{ opacity: 1, scale: 1 }}
@@ -160,15 +160,41 @@ export default function DashboardClient({ profileData }) {
     const acceptedCount = submissions.filter(s => s.status === 'Accepted').length;
     const acceptanceRate = totalSubmissions > 0 ? Math.round((acceptedCount / totalSubmissions) * 100) : 0;
 
-    // Current streak logic (simplified for UI demonstration)
-    const currentStreak = submissions.length > 0 ? 5 : 0; // Mocked logic: in reality, calculate consecutive days
+    // Consecutive days, counting back from today, on which the user submitted
+    // anything. Submitting yesterday but not yet today still counts, otherwise
+    // the streak would look broken every morning.
+    const currentStreak = useMemo(() => {
+        const dayKeys = new Set(
+            submissions.map((sub) => new Date(sub.createdAt).toDateString())
+        );
+        if (dayKeys.size === 0) return 0;
 
-    // Donut chart data (Mocked diff distribution from solvedProblems if available, or just static for demo)
-    const diffData = [
-        { name: 'Easy', value: 45, color: '#22C55E' },
-        { name: 'Medium', value: 30, color: '#F59E0B' },
-        { name: 'Hard', value: 10, color: '#EF4444' },
-    ];
+        const cursor = new Date();
+        if (!dayKeys.has(cursor.toDateString())) {
+            cursor.setDate(cursor.getDate() - 1);
+            if (!dayKeys.has(cursor.toDateString())) return 0;
+        }
+
+        let streak = 0;
+        while (dayKeys.has(cursor.toDateString())) {
+            streak += 1;
+            cursor.setDate(cursor.getDate() - 1);
+        }
+        return streak;
+    }, [submissions]);
+
+    // Real solved split, from the problems the user has actually solved.
+    const diffData = useMemo(() => {
+        const tally = { EASY: 0, MEDIUM: 0, HARD: 0 };
+        (profileData.solvedProblems || []).forEach((solved) => {
+            if (solved.problem) tally[solved.problem.difficulty] += 1;
+        });
+        return [
+            { name: 'Easy', value: tally.EASY, color: 'var(--success)' },
+            { name: 'Medium', value: tally.MEDIUM, color: 'var(--pending)' },
+            { name: 'Hard', value: tally.HARD, color: 'var(--error)' },
+        ].filter((slice) => slice.value > 0);
+    }, [profileData.solvedProblems]);
 
     const filteredSubmissions = useMemo(() => {
         if (statusFilter === "ALL") return submissions;
@@ -278,8 +304,8 @@ export default function DashboardClient({ profileData }) {
                                             ))}
                                         </Pie>
                                         <RechartsTooltip
-                                            contentStyle={{ backgroundColor: '#1C1C21', border: '1px solid #2A2A30', borderRadius: '8px' }}
-                                            itemStyle={{ color: '#F5F5F7' }}
+                                            contentStyle={{ backgroundColor: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '8px' }}
+                                            itemStyle={{ color: 'var(--text-primary)' }}
                                         />
                                     </PieChart>
                                 </ResponsiveContainer>
@@ -332,7 +358,7 @@ export default function DashboardClient({ profileData }) {
                     <div className="w-full">
                         {/* Table Header */}
                         <div className="hidden md:grid grid-cols-[1fr_120px_100px_100px_100px_150px_40px] gap-4 px-4 py-3 border-b border-border text-xs font-semibold tracking-wider text-text-muted uppercase">
-                            <div>Problem (ID)</div>
+                            <div>Problem</div>
                             <div>Status</div>
                             <div>Language</div>
                             <div>Runtime</div>
@@ -347,15 +373,15 @@ export default function DashboardClient({ profileData }) {
                                 {filteredSubmissions.length > 0 ? (
                                     filteredSubmissions.map((sub, index) => {
                                         const isExpanded = expandedRow === sub.id;
-                                        // Mock problem name parsing or use problem ID for now
-                                        const problemName = `Problem #${sub.problemId.slice(0, 6)}`;
+                                        const problemName = sub.problem
+                                            ? `${sub.problem.number}. ${sub.problem.title}`
+                                            : "Deleted problem";
 
                                         return (
                                             <motion.div
                                                 key={sub.id}
                                                 initial={{ opacity: 0, y: 10 }}
-                                                whileInView={{ opacity: 1, y: 0 }}
-                                                viewport={{ once: true }}
+                                                animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: (index % 15) * 0.03 }}
                                                 className="border-b border-border"
                                             >
@@ -364,9 +390,19 @@ export default function DashboardClient({ profileData }) {
                                                     className={`grid grid-cols-1 md:grid-cols-[1fr_120px_100px_100px_100px_150px_40px] gap-2 md:gap-4 px-4 py-2.5 md:py-2 items-center transition-colors cursor-pointer ${isExpanded ? 'bg-bg-elevated/50' : 'hover:bg-bg-elevated'}`}
                                                     onClick={() => setExpandedRow(isExpanded ? null : sub.id)}
                                                 >
-                                                    <div className="font-medium text-sm text-text-primary group-hover:text-accent truncate">
-                                                        {problemName}
-                                                    </div>
+                                                    {sub.problem ? (
+                                                        <Link
+                                                            href={`/problem/${sub.problem.id}`}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="font-medium text-sm text-text-primary hover:text-accent truncate"
+                                                        >
+                                                            {problemName}
+                                                        </Link>
+                                                    ) : (
+                                                        <div className="font-medium text-sm text-text-muted truncate">
+                                                            {problemName}
+                                                        </div>
+                                                    )}
 
                                                     <div className="flex items-center gap-2">
                                                         {getStatusIcon(sub.status)}
