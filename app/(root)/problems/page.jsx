@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { getAllProblems } from '@/modules/problems/actions';
+import { getSavedProblemIds } from '@/modules/playlists/actions';
 import ProblemsTable from '@/modules/problems/components/problem-table';
 import { currentUser } from '@clerk/nextjs/server'
 import React from 'react'
@@ -20,7 +21,10 @@ const ProblemsPage = async() => {
     });
     }
 
-    const { data: problems, error } = await getAllProblems();
+    const [{ data: problems, error }, savedIds] = await Promise.all([
+      getAllProblems(),
+      getSavedProblemIds(),
+    ]);
 
       if (error) {
     return (
@@ -34,7 +38,7 @@ const ProblemsPage = async() => {
   return (
     <div className='w-full min-h-screen bg-bg-base pt-32 pb-16 px-4 sm:px-6 lg:px-8'>
         <div className="max-w-6xl mx-auto">
-            <ProblemsTable problems={problems} user={dbUser} />
+            <ProblemsTable problems={problems} user={dbUser} savedIds={savedIds} />
         </div>
     </div>
   )

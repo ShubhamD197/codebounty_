@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import SaveToPlaylistButton from "@/modules/playlists/components/save-to-playlist-button";
 
 export const getDifficultyColor = (difficulty) => {
   switch (difficulty) {
@@ -23,16 +24,21 @@ export const getDifficultyColor = (difficulty) => {
  *
  * `trailing` is where a caller hangs list-specific controls (remove from
  * playlist, for example) without this component knowing about them.
-
+ *
+ * The save bookmark is only rendered for signed-in users: it needs somewhere
+ * to save to.
  */
 export default function ProblemRow({
   problem,
   solved = false,
   trailing = null,
+  showSave = false,
+  saved = false,
 }) {
   return (
     <div className="group grid grid-cols-1 md:grid-cols-[40px_1fr_120px_200px_auto] gap-2 md:gap-4 px-4 py-3 md:py-2.5 border-b border-border items-center transition-colors hover:bg-bg-elevated">
-      {/* Mobile: title, difficulty and controls on one line. */}
+      {/* Mobile: title, difficulty and controls on one line. The bookmark sits
+          in the flow rather than absolutely, so it cannot land on the badge. */}
       <div className="md:hidden flex items-center gap-2">
         <Link
           href={`/problem/${problem.id}`}
@@ -57,6 +63,13 @@ export default function ProblemRow({
           {problem.difficulty}
         </Badge>
         {trailing}
+        {showSave && (
+          <SaveToPlaylistButton
+            problemId={problem.id}
+            saved={saved}
+            title={problem.title}
+          />
+        )}
       </div>
 
       <div className="md:hidden pl-6 flex flex-wrap gap-1.5 items-center">
@@ -105,6 +118,13 @@ export default function ProblemRow({
       </div>
       <div className="hidden md:flex items-center justify-end gap-1 min-w-[40px]">
         {trailing}
+        {showSave && (
+          <SaveToPlaylistButton
+            problemId={problem.id}
+            saved={saved}
+            title={problem.title}
+          />
+        )}
       </div>
     </div>
   );

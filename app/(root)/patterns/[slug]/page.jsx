@@ -3,15 +3,21 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getPatternBySlug } from "@/modules/patterns/actions";
+import { getSavedProblemIds } from "@/modules/playlists/actions";
 import ProblemRow from "@/modules/problems/components/problem-row";
 
 export const dynamic = "force-dynamic";
 
 const PatternDetailPage = async ({ params }) => {
   const { slug } = await params;
-  const { data: pattern, success } = await getPatternBySlug(slug);
+  const [{ data: pattern, success }, savedIds] = await Promise.all([
+    getPatternBySlug(slug),
+    getSavedProblemIds(),
+  ]);
 
   if (!success || !pattern) notFound();
+
+  const saved = new Set(savedIds);
 
   const solvedCount = pattern.problems.filter(
     (problem) => problem.solvedBy?.length > 0
@@ -59,6 +65,8 @@ const PatternDetailPage = async ({ params }) => {
                 key={problem.id}
                 problem={problem}
                 solved={problem.solvedBy?.length > 0}
+                showSave
+                saved={saved.has(problem.id)}
               />
             ))}
           </div>

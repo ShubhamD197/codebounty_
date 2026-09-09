@@ -49,6 +49,8 @@ import {
 } from "@/modules/problems/actions";
 import { getJudge0LanguageId } from "@/lib/judge0/judge0";
 import { SubmissionHistory } from "@/modules/problems/components/submission-history";
+import AddToPlaylistButton from "@/modules/playlists/components/add-to-playlist-button";
+import { Show } from "@clerk/nextjs";
 
 const getDifficultyColor = (difficulty) => {
   switch (difficulty) {
@@ -249,6 +251,9 @@ export default function ProblemIdPage({ params }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <Show when="signed-in">
+            <AddToPlaylistButton problemId={problem.id} />
+          </Show>
           <motion.div whileTap={{ scale: 0.98 }}>
             <Button
               onClick={handleRun}

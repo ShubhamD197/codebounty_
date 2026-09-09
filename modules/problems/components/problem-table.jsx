@@ -18,7 +18,8 @@ export const matchesQuery = (problem, query) => {
   );
 };
 
-export default function ProblemsTable({ problems = [], user }) {
+export default function ProblemsTable({ problems = [], user, savedIds = [] }) {
+  const saved = useMemo(() => new Set(savedIds), [savedIds]);
   const [search, setSearch] = useState("");
   const [difficulty, setDifficulty] = useState("ALL");
   const [patternSlug, setPatternSlug] = useState("ALL");
@@ -131,6 +132,8 @@ export default function ProblemsTable({ problems = [], user }) {
                 key={problem.id}
                 problem={problem}
                 solved={problem.solvedBy?.length > 0}
+                showSave={Boolean(user)}
+                saved={saved.has(problem.id)}
               />
             ))
           ) : (
