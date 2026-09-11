@@ -8,18 +8,8 @@ import React from "react";
 // errors that were never actionable.
 export const dynamic = "force-dynamic";
 
-/**
- * Page chrome for the whole app.
- *
- * Deliberately holds no padding or width of its own. It used to add `px-4` on
- * top of each page's own horizontal padding, so every page was padded twice,
- * and it capped `<main>` at `max-h-screen` while its children asked for
- * `min-h-screen` — two rules that cannot both hold. Spacing now lives in one
- * place, PageShell, and pages opt out of it only when they are full-bleed.
- */
-const RootLayout = async ({ children }) => {
-  const userRole = await currentUserRole();
-
+const RootLayout = async({ children }) => {
+  const userRole = await currentUserRole()
   return (
     <div className="min-h-screen bg-bg-base">
       <Navbar userRole={userRole} />

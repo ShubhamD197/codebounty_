@@ -2,6 +2,16 @@
 import { db } from "@/lib/db"
 import { currentUser } from "@clerk/nextjs/server"
 
+/**
+ * Next aborts a static render by throwing, and it identifies that error by
+ * digest. A blanket catch swallows the signal, which both floods the build log
+ * and makes the caller return a fake "no user" result for a render that was
+ * only being probed. Rethrow it and let Next do its job.
+ */
+const rethrowIfFrameworkSignal = (error) => {
+    if (error?.digest === "DYNAMIC_SERVER_USAGE") throw error;
+};
+
 //fetch user data when user log in first time and store it in db (upsert())
 export const onBoardUser = async() =>{
     try {
@@ -34,6 +44,7 @@ export const onBoardUser = async() =>{
         })
         return {success:true, user:newUser, message:"User onboarded successfully"};
     } catch (error) {
+        rethrowIfFrameworkSignal(error);
         console.log("❌Error in onBoardUser", error);
         return {success:false, error:"Failed to onboard user"};
     }
@@ -60,6 +71,7 @@ export const currentUserRole = async ()=>{
     // Null on the first request after sign-up, before onBoardUser has run.
     return userRole?.role ?? null;
   } catch (error) {
+     rethrowIfFrameworkSignal(error);
      console.error("❌ Error fetching user role:", error);
         return { success: false, error: "Failed to fetch user role" };
   }
