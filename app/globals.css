@@ -8,7 +8,12 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Mayoze is the brand face. It ships a single Regular cut, so Inter sits
+     directly behind it to cover anything Mayoze lacks. */
+  --font-sans: var(--font-mayoze), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Same stack today. Split out so headings and the wordmark can keep Mayoze
+     if body copy is ever moved back to Inter: change --font-sans alone. */
+  --font-display: var(--font-mayoze), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
   --color-bg-base: var(--bg-base);
   --color-bg-surface: var(--bg-surface);
