@@ -20,7 +20,7 @@ export function ClerkThemeProvider({ children }) {
           // Clerk's own DOM sits outside our Tailwind classes, so it needs
           // the same stack spelled out or sign-in would be the one screen
           // still rendering in Inter.
-          fontFamily: "var(--font-mayoze), var(--font-inter), sans-serif",
+          fontFamily: "var(--font-segoe), var(--font-inter), sans-serif",
           borderRadius: "0.5rem",
         },
       }}

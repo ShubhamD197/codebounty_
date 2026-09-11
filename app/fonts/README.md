@@ -1,19 +1,32 @@
-# Mayoze
+# Segoe
 
-`mayoze-regular.woff2` — the display face used for the CodeBounty wordmark,
-headings, and page titles.
+`segoe-regular.woff2` — the application typeface, used for all UI text.
+Code keeps JetBrains Mono.
 
-- Copyright embedded in the font file: `Mayoze © salamahtype. 2024. All Rights
-  Reserved.`
-- Obtained from onlinewebfonts.com, whose bundled licence text asks for
-  attribution and also warns that "some fonts provided are trial versions of
-  full versions and may not allow embedding unless a commercial license is
-  purchased".
+## Provenance and licence
 
-Those two statements do not agree. Before this ships anywhere commercial,
-confirm the licence with the foundry (salamahtype). If it turns out not to be
-licensed for web embedding, the only change needed is the `src` in
-`app/layout.js` — nothing else references the file.
+Downloaded from onlinewebfonts.com. The copyright string embedded in the file
+reads, verbatim:
 
-Only a Regular weight exists. There is no bold or italic cut, so anything
-heavier is synthesised by the browser.
+> Digitized data (c) 1997-2003 Agfa Monotype Corporation. All rights reserved.
+> Segoe is a trademark of The Monotype Corporation.
+
+This is a Monotype typeface. A web licence for it comes from Monotype, and
+onlinewebfonts is not in a position to grant one. Redistributing and embedding
+it here was a deliberate decision taken with that known; it is recorded so
+nobody later assumes the font was cleared.
+
+Swapping it out touches one line: the `src` in `app/layout.js`. Nothing else in
+the codebase names the file.
+
+The zero-risk alternative, if this ever needs to change: a `"Segoe UI"` local
+font stack renders the real thing on Windows at no download cost, with
+[Selawik](https://github.com/microsoft/Selawik) — Microsoft's own open-source,
+metric-compatible substitute — covering everything else. Selawik also ships
+real Semibold and Bold cuts.
+
+## Known limitation
+
+Regular only. No bold, no italic, 249 glyphs. Every `font-semibold` and
+`font-bold` in the app is synthesised by the browser rather than drawn by the
+designer.

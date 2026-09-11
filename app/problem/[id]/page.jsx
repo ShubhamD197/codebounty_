@@ -273,7 +273,7 @@ export default function ProblemIdPage({ params }) {
             <Button
               onClick={handleSubmit}
               disabled={executionState === "RUNNING"}
-              className="flex items-center gap-2 h-9 bg-accent hover:bg-accent-hover text-white shadow-[0_0_10px_rgba(139,92,246,0.2)] hover:shadow-[0_0_15px_rgba(167,139,250,0.4)] transition-all border-0"
+              className="flex items-center gap-2 h-9 bg-accent hover:bg-accent-hover text-white transition-all border-0"
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
@@ -465,7 +465,7 @@ export default function ProblemIdPage({ params }) {
                         <motion.div
                           animate={{ scale: [1, 1.15, 1] }}
                           transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-                          className="h-3 w-3 rounded-full bg-pending shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                          className="h-3 w-3 rounded-full bg-pending"
                         />
                         <span className="text-sm font-medium text-pending">Executing...</span>
                       </motion.div>

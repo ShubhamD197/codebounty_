@@ -17,20 +17,20 @@ const jetBrainsMono = JetBrains_Mono({
 
 // Self-hosted rather than pulled from onlinewebfonts' CDN: that would add a
 // render-blocking stylesheet from a third party on every page, on a host we do
-// not control. next/font/local inlines the @font-face, preloads the file, and
-// generates a metric-matched Arial fallback so swapping it in causes no layout
-// shift. See app/fonts/README.md for the licence question.
-const mayoze = localFont({
-  src: "./fonts/mayoze-regular.woff2",
-  variable: "--font-mayoze",
-  // The family ships a single Regular cut; saying so stops the browser
-  // synthesising a slant when italics are asked for.
+// not control. next/font/local inlines the @font-face, serves the file from our
+// own origin, preloads it, and generates a metric-matched fallback so the swap
+// causes no layout shift. See app/fonts/README.md for the licence position.
+const segoe = localFont({
+  src: "./fonts/segoe-regular.woff2",
+  variable: "--font-segoe",
+  // A single Regular cut ships; declaring it stops the browser inventing a
+  // slant when italics are requested.
   weight: "400",
   style: "normal",
   display: "swap",
   // Plain family names only. next/font writes these straight into a
-  // font-family list, so a var() here would not resolve. The real chain,
-  // including Inter, is assembled in globals.css.
+  // font-family list, so a var() here would not resolve. The full chain,
+  // Inter included, is assembled in globals.css.
   fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
 });
 
@@ -43,7 +43,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body
-        className={`${inter.variable} ${jetBrainsMono.variable} ${mayoze.variable} antialiased font-sans`}
+        className={`${inter.variable} ${jetBrainsMono.variable} ${segoe.variable} antialiased font-sans`}
       >
         <ThemeProvider
           attribute="class"

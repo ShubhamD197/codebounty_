@@ -140,7 +140,7 @@ export const SubmissionHistory = ({ submissions = [] }) => {
               <div className="bg-bg-elevated border border-border rounded-xl p-4 flex flex-col justify-between">
                 <span className="text-xs font-medium text-text-muted mb-2">Runtime</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-text-primary font-mono">
+                  <span className="text-xl font-semibold text-text-primary font-mono">
                     {selectedSubmission.performance?.time?.[0] || selectedSubmission.time || "N/A"}
                   </span>
                 </div>
@@ -148,7 +148,7 @@ export const SubmissionHistory = ({ submissions = [] }) => {
               <div className="bg-bg-elevated border border-border rounded-xl p-4 flex flex-col justify-between">
                 <span className="text-xs font-medium text-text-muted mb-2">Memory</span>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-text-primary font-mono">
+                  <span className="text-xl font-semibold text-text-primary font-mono">
                     {selectedSubmission.performance?.memory?.[0] || selectedSubmission.memory || "N/A"}
                   </span>
                 </div>

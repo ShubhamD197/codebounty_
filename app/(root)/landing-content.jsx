@@ -45,7 +45,7 @@ export default function LandingContent() {
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-screen overflow-hidden text-text-primary">
       {/* Hero Section */}
-      <section className="relative w-full max-w-7xl px-6 pt-32 pb-24 md:pt-48 md:pb-32 flex flex-col items-center text-center">
+      <section className="relative w-full max-w-7xl px-6 pt-20 pb-20 md:pt-28 md:pb-28 flex flex-col items-center text-center">
         {/* Subtle Radial Glow */}
         <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent/20 rounded-full blur-[120px] pointer-events-none -z-10"></div>
         
@@ -64,7 +64,7 @@ export default function LandingContent() {
 
           <motion.h1 
             variants={itemVariants}
-            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-8"
+            className="text-4xl md:text-6xl font-semibold tracking-tight mb-8"
           >
             Master algorithms. <br className="hidden md:block" />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-accent to-accent-gradient-end">
@@ -103,7 +103,7 @@ export default function LandingContent() {
           style={{ perspective: "1000px" }}
           className="mt-24 w-full max-w-5xl z-10"
         >
-          <div className="rounded-2xl border border-border bg-bg-surface/80 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.5)] shadow-accent/10 backdrop-blur-md overflow-hidden transform-gpu hover:rotate-x-0 transition-transform duration-500">
+          <div className="rounded-xl border border-border bg-bg-surface overflow-hidden">
             <div className="flex items-center px-4 py-3 border-b border-border bg-bg-elevated/50">
               <div className="flex gap-2">
                 <div className="w-3 h-3 rounded-full bg-border"></div>
@@ -140,7 +140,7 @@ export default function LandingContent() {
           transition={{ duration: 0.5 }}
           className="mb-16"
         >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Built for performance.</h2>
+          <h2 className="text-2xl font-semibold mb-4">Built for performance.</h2>
           <p className="text-text-muted text-lg">Everything you need to level up your engineering skills.</p>
         </motion.div>
 

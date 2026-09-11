@@ -44,3 +44,6 @@ next-env.d.ts
 
 # clerk configuration (can include secrets)
 /.clerk/
+
+# Downloaded font archives; only the extracted woff2 in app/fonts belongs in git
+OnlineWebFonts_COM_*.zip

@@ -7,6 +7,7 @@ import PatternSkills from "@/modules/profile/components/pattern-skills";
 import SolvedSummary from "@/modules/profile/components/solved-summary";
 import ActivityHeatmap from "@/modules/profile/components/activity-heatmap";
 import ProfileActivity from "@/modules/profile/components/profile-activity";
+import PageShell from "@/components/page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +30,8 @@ const ProfilePage = async () => {
       : 0;
 
   return (
-    <div className="w-full min-h-screen bg-bg-base pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row gap-6">
+    <PageShell>
+      <div className="flex flex-col gap-6 lg:flex-row">
         {/* The rail sticks so progress stays in view while the activity scrolls. */}
         <aside className="w-full lg:w-72 lg:flex-shrink-0 space-y-4 lg:sticky lg:top-32 lg:self-start">
           <ProfileIdentity user={user} />
@@ -63,7 +64,7 @@ const ProfilePage = async () => {
           />
         </main>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

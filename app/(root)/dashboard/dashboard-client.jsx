@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import PageShell from '@/components/page-shell';
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from 'motion/react';
 import {
     Flame, Target, Trophy, Activity, CheckCircle2, XCircle, Clock,
@@ -138,7 +139,7 @@ const CircularProgress = ({ percentage }) => {
                     fill="transparent"
                     strokeDasharray={circumference}
                     style={{ strokeDashoffset }}
-                    className="text-accent stroke-current drop-shadow-[0_0_8px_rgba(139,92,246,0.5)]"
+                    className="text-accent stroke-current"
                     strokeLinecap="round"
                 />
             </svg>
@@ -218,15 +219,15 @@ export default function DashboardClient({ profileData }) {
     };
 
     return (
-        <div className="w-full min-h-screen bg-bg-base pt-28 pb-16 px-4 sm:px-6 lg:px-8 text-text-primary overflow-hidden">
-            <div className="max-w-6xl mx-auto space-y-16">
+        <PageShell className="text-text-primary">
+            <div className="space-y-16">
 
                 {/* =========================================
                     ZONE A: STATS OVERVIEW (WOW ZONE)
                 ========================================= */}
                 <div className="space-y-6">
                     <div>
-                        <h1 className="text-4xl font-bold tracking-tight mb-2">Dashboard</h1>
+                        <h1 className="text-2xl font-semibold tracking-tight mb-2">Dashboard</h1>
                         <p className="text-text-muted">Track your progress, activity, and submission history.</p>
                     </div>
 
@@ -240,7 +241,7 @@ export default function DashboardClient({ profileData }) {
                                 <Activity className="w-5 h-5" />
                                 <span className="font-medium text-sm">Total Submissions</span>
                             </div>
-                            <div className="text-4xl font-black text-text-primary">
+                            <div className="text-3xl font-semibold text-text-primary">
                                 <AnimatedCounter value={totalSubmissions} />
                             </div>
                         </motion.div>
@@ -255,7 +256,7 @@ export default function DashboardClient({ profileData }) {
                                 <span className="font-medium text-sm">Acceptance Rate</span>
                             </div>
                             <div className="flex items-end justify-between relative z-10">
-                                <div className="text-4xl font-black text-text-primary">
+                                <div className="text-3xl font-semibold text-text-primary">
                                     <AnimatedCounter value={acceptanceRate} /><span className="text-2xl text-text-muted">%</span>
                                 </div>
                                 <CircularProgress percentage={acceptanceRate} />
@@ -267,14 +268,11 @@ export default function DashboardClient({ profileData }) {
                             initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: 0.16 }}
                             className="col-span-1 md:col-span-3 bg-bg-surface border border-border rounded-2xl p-6 flex flex-col justify-between relative overflow-hidden group"
                         >
-                            {currentStreak > 0 && (
-                                <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-orange-500/20 blur-3xl rounded-full group-hover:bg-orange-500/30 transition-colors" />
-                            )}
                             <div className="flex items-center gap-3 text-text-muted mb-4 relative z-10">
                                 <Flame className={`w-5 h-5 ${currentStreak > 0 ? 'text-orange-500' : ''}`} />
                                 <span className="font-medium text-sm">Current Streak</span>
                             </div>
-                            <div className="text-4xl font-black text-text-primary relative z-10">
+                            <div className="text-3xl font-semibold text-text-primary relative z-10">
                                 <AnimatedCounter value={currentStreak} /><span className="text-xl text-text-muted ml-2 font-medium">Days</span>
                             </div>
                         </motion.div>
@@ -463,7 +461,7 @@ export default function DashboardClient({ profileData }) {
                                         <h3 className="text-lg font-medium text-text-primary mb-1">No submissions yet</h3>
                                         <p className="text-sm text-text-muted mb-6">Start solving problems to build your history.</p>
                                         <Link href="/problems">
-                                            <button className="bg-accent hover:bg-accent-hover text-white text-sm font-medium px-6 py-2 rounded-xl transition-all shadow-[0_0_10px_rgba(139,92,246,0.2)]">
+                                            <button className="bg-accent hover:bg-accent-hover text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors">
                                                 Solve your first problem
                                             </button>
                                         </Link>
@@ -475,6 +473,6 @@ export default function DashboardClient({ profileData }) {
                 </div>
 
             </div>
-        </div>
+        </PageShell>
     );
 }

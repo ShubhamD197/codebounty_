@@ -16,6 +16,7 @@ import {
   GripVertical,
 } from "lucide-react";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -428,6 +429,10 @@ const EMPTY_TEMPLATES = {
 
 // CODE EDITOR
 const CodeEditor = ({ value, onChange, language = "javascript", title }) => {
+  // The surrounding chrome used to be a fixed dark shell, so the editor was
+  // pinned to vs-dark. Now that the shell uses theme tokens, a dark editor
+  // inside a light card would be the only thing not following the theme.
+  const { resolvedTheme } = useTheme();
   const languageMap = {
     javascript: "javascript",
     python: "python",
@@ -435,20 +440,17 @@ const CodeEditor = ({ value, onChange, language = "javascript", title }) => {
   };
 
   return (
-    <div className="group rounded-md border border-border/40 bg-zinc-950 overflow-hidden transition-all focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 shadow-sm">
-      <div className="flex items-center justify-between px-4 py-2 bg-zinc-900 border-b border-border/40">
-        <span className="text-xs font-mono text-zinc-400 uppercase tracking-wider">{title}</span>
-        <div className="flex gap-1.5">
-          <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-          <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-          <div className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
-        </div>
+    <div className="group overflow-hidden rounded-lg border border-border bg-bg-surface transition-colors focus-within:border-accent/50">
+      <div className="flex items-center justify-between border-b border-border px-3 py-2">
+        <span className="font-mono text-xs uppercase tracking-wider text-text-muted">
+          {title}
+        </span>
       </div>
       <div className="h-[350px] w-full">
         <Editor
           height="100%"
           defaultLanguage={languageMap[language]}
-          theme="vs-dark"
+          theme={resolvedTheme === "light" ? "light" : "vs-dark"}
           value={value}
           onChange={onChange}
           options={{
@@ -567,7 +569,7 @@ const CreateProblemForm = ({ patterns = [] }) => {
     <div className="min-h-screen bg-background text-foreground pb-20">
       <form onSubmit={handleSubmit(onSubmit)}>
         {/* Sticky Action Header */}
-        <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border shadow-sm px-6 py-4 mb-8">
+        <div className="sticky top-14 z-40 -mx-5 border-b border-border bg-bg-base/90 px-5 py-3 mb-8 backdrop-blur-sm sm:-mx-8 sm:px-8">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
@@ -711,7 +713,7 @@ const CreateProblemForm = ({ patterns = [] }) => {
                                   <span className="text-green-500 font-medium">Easy</span>
                                 </SelectItem>
                                 <SelectItem value="MEDIUM">
-                                  <span className="text-amber-500 font-medium">Medium</span>
+                                  <span className="font-medium text-pending">Medium</span>
                                 </SelectItem>
                                 <SelectItem value="HARD">
                                   <span className="text-red-500 font-medium">Hard</span>
