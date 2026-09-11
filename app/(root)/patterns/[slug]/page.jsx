@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getPatternBySlug } from "@/modules/patterns/actions";
+import PageShell from "@/components/page-shell";
 import { getSavedProblemIds } from "@/modules/playlists/actions";
 import ProblemRow from "@/modules/problems/components/problem-row";
 
@@ -24,8 +25,7 @@ const PatternDetailPage = async ({ params }) => {
   ).length;
 
   return (
-    <div className="w-full min-h-screen bg-bg-base pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-4xl mx-auto">
+    <PageShell width="narrow">
         <Link
           href="/patterns"
           className="inline-flex items-center gap-2 text-sm text-text-muted hover:text-text-primary transition-colors mb-8"
@@ -39,7 +39,7 @@ const PatternDetailPage = async ({ params }) => {
             className="size-3 rounded-full"
             style={{ backgroundColor: pattern.color ?? "#71717A" }}
           />
-          <h1 className="text-4xl font-bold tracking-tight text-text-primary">
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary">
             {pattern.name}
           </h1>
         </div>
@@ -71,8 +71,7 @@ const PatternDetailPage = async ({ params }) => {
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </PageShell>
   );
 };
 

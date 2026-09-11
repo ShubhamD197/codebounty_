@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getUserPlaylists } from "@/modules/playlists/actions";
 import PlaylistSidebar from "@/modules/playlists/components/playlist-sidebar";
+import PageShell from "@/components/page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -14,12 +15,12 @@ const PlaylistsLayout = async ({ children }) => {
   if (!success) redirect("/sign-in");
 
   return (
-    <div className="w-full min-h-screen bg-bg-base pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-10">
+    <PageShell width="wide">
+      <div className="flex flex-col gap-10 lg:flex-row">
         <PlaylistSidebar playlists={playlists} />
-        <div className="flex-1 min-w-0">{children}</div>
+        <div className="min-w-0 flex-1">{children}</div>
       </div>
-    </div>
+    </PageShell>
   );
 };
 

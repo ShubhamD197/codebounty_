@@ -1,17 +1,16 @@
 "use client";
 
-import { Button } from '@/components/ui/button'
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
-import { ModeToggle } from '@/components/ui/mode-toggle'
-import { Show, SignInButton, SignUpButton, UserButton } from '@clerk/nextjs'
-import { UserRole } from '@prisma/client'
-import { Menu } from 'lucide-react'
-import Image from 'next/image'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import React from 'react'
-import { CommandMenu } from './command-menu'
-import { motion } from "motion/react"
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ModeToggle } from "@/components/ui/mode-toggle";
+import { Show, SignInButton, SignUpButton, UserButton } from "@clerk/nextjs";
+import { UserRole } from "@prisma/client";
+import { Menu } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import React from "react";
+import { CommandMenu } from "./command-menu";
 
 const NAV_LINKS = [
   { href: "/patterns", label: "Patterns" },
@@ -20,6 +19,15 @@ const NAV_LINKS = [
   { href: "/profile", label: "Profile" },
 ];
 
+/**
+ * A plain sticky bar, 56px tall, separated from the page by a single hairline.
+ *
+ * It was previously a floating pill: inset from the top, fully rounded, with a
+ * blur halo behind the logo, a 2xl shadow and an entrance animation. It needed
+ * 128px of clearance, which is why every page began so far down the viewport,
+ * and it sat at a different width from the content beneath it, so nothing
+ * aligned. A bar that shares the page's own gutters lines up with everything.
+ */
 const Navbar = ({ userRole }) => {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = React.useState(false);
@@ -28,136 +36,124 @@ const Navbar = ({ userRole }) => {
   const isActive = (href) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <motion.nav
-      initial={{ y: -20, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.4, ease: "easeOut" }}
-      className="fixed top-6 left-1/2 transform -translate-x-1/2 z-50 w-full max-w-6xl px-4"
-    >
-      <div className="bg-bg-surface/60 backdrop-blur-xl border border-border rounded-2xl shadow-2xl transition-all duration-300">
-        <div className="px-4 sm:px-6 py-3 flex justify-between items-center gap-3">
-          <Link href={"/"} className="flex items-center gap-3 group">
-            <div className="relative">
-              <div className="absolute inset-0 bg-accent/20 blur-md rounded-full scale-110 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-              <Image src="/logo.svg"
-                alt="CodeBounty"
-                width={36}
-                height={36}
-                className="dark:invert relative z-10" />
-            </div>
-            <span className="font-bold text-xl tracking-wide text-text-primary">
-              CodeBounty
-            </span>
-          </Link>
+    <header className="sticky top-0 z-50 border-b border-border bg-bg-base/85 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-7xl items-center gap-4 px-5 sm:px-8">
+        <Link href="/" className="flex items-center gap-2">
+          <Image
+            src="/logo.svg"
+            alt=""
+            width={22}
+            height={22}
+            className="dark:invert"
+          />
+          <span className="text-[15px] font-semibold tracking-tight text-text-primary">
+            CodeBounty
+          </span>
+        </Link>
 
-          <div className="hidden md:flex flex-row items-center justify-center gap-x-6">
-            {NAV_LINKS.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`text-sm font-medium transition-colors duration-200 ${
-                  isActive(link.href)
-                    ? "text-text-primary"
-                    : "text-text-secondary hover:text-text-primary"
-                }`}
+        <nav className="hidden md:flex items-center gap-1">
+          {NAV_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className={`rounded-md px-2.5 py-1.5 text-sm transition-colors ${
+                isActive(link.href)
+                  ? "text-text-primary"
+                  : "text-text-muted hover:text-text-primary"
+              }`}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-1.5">
+          <CommandMenu />
+          <ModeToggle />
+
+          <Show when="signed-in">
+            {userRole === UserRole.ADMIN && (
+              <Button
+                variant="ghost"
+                size="sm"
+                nativeButton={false}
+                className="hidden sm:inline-flex"
+                render={<Link href="/create-problem" />}
               >
-                {link.label}
-              </Link>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2 sm:gap-4">
-            <CommandMenu />
-
-            <div className="h-4 w-px bg-border hidden sm:block"></div>
-
-            <ModeToggle />
-
-            <Show when="signed-in">
-              {userRole && userRole === UserRole.ADMIN && (
-                <Link href={"/create-problem"} className="hidden sm:block">
-                  <Button variant={"outline"} size={"sm"} className="border-border hover:border-accent hover:bg-accent/10 transition-colors">
-                    Admin
-                  </Button>
-                </Link>
-              )}
+                Admin
+              </Button>
+            )}
+            <div className="ml-1 flex items-center">
               <UserButton />
-            </Show>
+            </div>
+          </Show>
 
-            <Show when="signed-out">
-              <div className="hidden sm:flex items-center gap-2">
-                <SignInButton>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-sm font-medium text-text-secondary hover:text-text-primary hover:bg-bg-elevated transition-colors"
-                  >
-                    Log in
-                  </Button>
-                </SignInButton>
-                <SignUpButton>
-                  <Button
-                    size="sm"
-                    className="text-sm font-medium bg-accent hover:bg-accent-hover text-white transition-all border-0"
-                  >
-                    Sign Up
-                  </Button>
-                </SignUpButton>
-              </div>
-            </Show>
+          <Show when="signed-out">
+            <div className="hidden sm:flex items-center gap-1">
+              <SignInButton>
+                <Button variant="ghost" size="sm">
+                  Log in
+                </Button>
+              </SignInButton>
+              <SignUpButton>
+                <Button size="sm">Sign up</Button>
+              </SignUpButton>
+            </div>
+          </Show>
 
-            {/* Below md the links above are hidden, so they need somewhere to go. */}
-            <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
-              <SheetTrigger
-                className="md:hidden"
-                render={<Button variant="ghost" size="icon" aria-label="Open menu" />}
-              >
-                <Menu className="h-5 w-5" />
-              </SheetTrigger>
-              <SheetContent side="right" className="w-64">
-                <SheetTitle className="px-4 pt-4">Menu</SheetTitle>
-                <nav className="flex flex-col gap-1 p-4">
-                  {NAV_LINKS.map((link) => (
+          {/* Below md the links above are hidden, so they need somewhere to go. */}
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger
+              className="md:hidden"
+              render={<Button variant="ghost" size="icon" aria-label="Open menu" />}
+            >
+              <Menu className="size-4" />
+            </SheetTrigger>
+            <SheetContent side="right" className="w-60">
+              <SheetTitle className="px-4 pt-4 text-sm">Menu</SheetTitle>
+              <nav className="flex flex-col gap-0.5 p-3">
+                {NAV_LINKS.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`rounded-md px-3 py-2 text-sm transition-colors ${
+                      isActive(link.href)
+                        ? "bg-bg-elevated text-text-primary"
+                        : "text-text-muted hover:bg-bg-elevated hover:text-text-primary"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+                <Show when="signed-in">
+                  {userRole === UserRole.ADMIN && (
                     <Link
-                      key={link.href}
-                      href={link.href}
+                      href="/create-problem"
                       onClick={() => setMobileOpen(false)}
-                      className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
-                        isActive(link.href)
-                          ? "bg-bg-elevated text-text-primary"
-                          : "text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
-                      }`}
+                      className="rounded-md px-3 py-2 text-sm text-text-muted hover:bg-bg-elevated hover:text-text-primary"
                     >
-                      {link.label}
+                      Admin
                     </Link>
-                  ))}
-                  <Show when="signed-in">
-                    {userRole === UserRole.ADMIN && (
-                      <Link
-                        href="/create-problem"
-                        onClick={() => setMobileOpen(false)}
-                        className="rounded-lg px-3 py-2 text-sm font-medium text-text-secondary hover:bg-bg-elevated hover:text-text-primary"
-                      >
-                        Admin
-                      </Link>
-                    )}
-                  </Show>
-                  <Show when="signed-out">
-                    <SignInButton>
-                      <Button variant="outline" className="mt-2 w-full">Log in</Button>
-                    </SignInButton>
-                    <SignUpButton>
-                      <Button className="mt-2 w-full">Sign Up</Button>
-                    </SignUpButton>
-                  </Show>
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
+                  )}
+                </Show>
+                <Show when="signed-out">
+                  <SignInButton>
+                    <Button variant="outline" className="mt-2 w-full">
+                      Log in
+                    </Button>
+                  </SignInButton>
+                  <SignUpButton>
+                    <Button className="mt-1.5 w-full">Sign up</Button>
+                  </SignUpButton>
+                </Show>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
-    </motion.nav>
-  )
-}
+    </header>
+  );
+};
 
-export default Navbar
+export default Navbar;

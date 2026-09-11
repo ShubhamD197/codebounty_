@@ -39,7 +39,7 @@ export default function AuthLayout({ children }) {
                 <div className="relative z-10 flex flex-col items-center text-center max-w-lg">
                     <div className="mb-8 relative">
                         <div className="absolute inset-0 bg-accent/20 blur-xl rounded-full scale-150"></div>
-                        <Image src="/logo.svg" alt="CodeBounty" width={80} height={80} className="dark:invert relative z-10 drop-shadow-2xl" />
+                        <Image src="/logo.svg" alt="CodeBounty" width={80} height={80} className="dark:invert relative z-10" />
                     </div>
                     <h2 className="text-4xl font-bold mb-4 text-text-primary tracking-tight">
                         Master the patterns.

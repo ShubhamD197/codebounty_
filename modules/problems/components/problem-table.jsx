@@ -53,10 +53,10 @@ export default function ProblemsTable({ problems = [], user, savedIds = [] }) {
       <div className="mb-16">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-text-primary mb-4">
+            <h1 className="text-2xl font-semibold tracking-tight text-text-primary mb-4">
               Algorithm Catalog
             </h1>
-            <p className="text-lg text-text-muted max-w-2xl">
+            <p className="text-sm text-text-muted max-w-2xl">
               Practice by pattern, not at random. Filter by the technique a problem
               teaches, by difficulty, or search directly.
             </p>

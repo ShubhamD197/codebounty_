@@ -75,7 +75,7 @@ export function CommandMenu() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="w-full max-w-lg overflow-hidden bg-bg-elevated rounded-xl border border-border shadow-2xl shadow-accent/10"
+              className="w-full max-w-lg overflow-hidden bg-bg-elevated rounded-xl border border-border shadow-lg"
             >
               <Command className="w-full" loop>
                 <div className="flex items-center border-b border-border px-3">

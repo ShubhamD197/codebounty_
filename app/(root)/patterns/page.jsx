@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getAllPatterns } from "@/modules/patterns/actions";
 import { progressPercent } from "@/modules/patterns/progress";
+import PageShell from "@/components/page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +18,12 @@ const PatternsPage = async () => {
   }
 
   return (
-    <div className="w-full min-h-screen bg-bg-base pt-32 pb-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
+    <PageShell>
         <div className="mb-16">
-          <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-text-primary mb-4">
+          <h1 className="text-2xl font-semibold tracking-tight text-text-primary mb-4">
             Patterns
           </h1>
-          <p className="text-lg text-text-muted max-w-2xl">
+          <p className="text-sm text-text-muted max-w-2xl">
             Most problems are one of a few dozen ideas wearing a costume. Learn
             the idea once, then recognise it everywhere.
           </p>
@@ -72,8 +72,7 @@ const PatternsPage = async () => {
             );
           })}
         </div>
-      </div>
-    </div>
+    </PageShell>
   );
 };
 

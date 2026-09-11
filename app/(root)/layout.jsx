@@ -11,13 +11,10 @@ export const dynamic = "force-dynamic";
 const RootLayout = async({ children }) => {
   const userRole = await currentUserRole()
   return (
-    <main className="flex flex-col min-h-screen max-h-screen">
-      <Navbar userRole={userRole}/>
-      <div className="flex-1 flex flex-col px-4 pb-4">
-        <div className="absolute inset-0 -z-10 h-full w-full bg-background"/>
-        {children}
-      </div>
-    </main>
+    <div className="min-h-screen bg-bg-base">
+      <Navbar userRole={userRole} />
+      <main>{children}</main>
+    </div>
   );
 };
 

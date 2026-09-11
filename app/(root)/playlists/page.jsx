@@ -11,7 +11,7 @@ const PlaylistsPage = async () => {
 
   return (
     <div>
-      <h1 className="text-4xl font-bold tracking-tight text-text-primary mb-3">
+      <h1 className="text-2xl font-semibold tracking-tight text-text-primary mb-3">
         Playlists
       </h1>
       <p className="text-text-muted mb-10 max-w-2xl">
